@@ -5,13 +5,14 @@
 #'@param family   distribution name; run the function distributions() for help
 #'@param y  observations
 #'@param param  parameters of the distribution; (1 x p)
+#'@param size additional parameter for some discrete distributions; run the command distributions() for help
 #'
 #'@return \item{f}{pdf}
 #'
 #'@export
 
 
-PDF<-function(family,y,param){
+PDF<-function(family,y,param,size=0){
 
 
   switch(family,
@@ -24,12 +25,7 @@ PDF<-function(family,y,param){
          } ,
 
 
-         "asymlaplace" = {    ## [R, R+, R+]
 
-
-             f = VGAM::dalap(y, location = param[1], scale = param[2], kappa = param[3])
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
@@ -89,7 +85,7 @@ PDF<-function(family,y,param){
          "betabinomial" = {     ## [N+, R+, R+]
 
 
-             f = extraDistr::dbbinom(y, size = param[1], alpha = param[2], beta = param[3])
+             f = extraDistr::dbbinom(y, size = size, alpha = param[1], beta = param[2])
 
          } ,
 
@@ -105,7 +101,7 @@ PDF<-function(family,y,param){
          "betanegativebinomial" = {     ## [N+, R+, R+]
 
 
-             f = extraDistr::dbnbinom(y, size = param[1], alpha = param[2], beta = param[3])
+             f = extraDistr::dbnbinom(y, size = size, alpha = param[1], beta = param[2])
 
          } ,
 
@@ -218,7 +214,7 @@ PDF<-function(family,y,param){
 
          "binomial" = {     ## [N+, 01]
 
-             f = stats::dbinom(y, size = param[1], prob = param[2])
+             f = stats::dbinom(y, size = size, prob = param[1])
 
          } ,
 
@@ -913,13 +909,6 @@ PDF<-function(family,y,param){
          } ,
 
 
-         "loglaplace" = {     ## [R, R+, R+]
-
-
-             f = VGAM::dloglap(y, location.ald = param[1], scale.ald = param[2], kappa = param[3])
-
-         } ,
-
 
          "loglog" = {     ## [R+, >1]
 
@@ -1061,7 +1050,7 @@ PDF<-function(family,y,param){
 
          "negativebinomial" = {     ## [N+, 01]
 
-             f = stats::dnbinom(y, size = param[1], prob = param[2])
+             f = stats::dnbinom(y, size = size, prob = param[1])
 
          } ,
 

@@ -6,20 +6,22 @@
 \usage{
 GofHMMGen(
   y,
+  ZI = 0,
   reg,
   family,
   start = 0,
   max_iter = 10000,
-  eps = 0.001,
-  graph = 0,
+  eps = 1e-04,
   size = 0,
-  n_sample = 100,
+  n_samples = 1000,
   n_cores = 1,
-  useFest = 1
+  useFest = TRUE
 )
 }
 \arguments{
 \item{y}{observations}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{reg}{number of regimes}
 
@@ -31,15 +33,13 @@ GofHMMGen(
 
 \item{eps}{precision (stopping criteria); suggestion 0.0001.}
 
-\item{graph}{1 for a graph, 0 otherwise (default); only for continuous distributions}
-
 \item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 
-\item{n_sample}{number of bootstrap samples; suggestion 1000}
+\item{n_samples}{number of bootstrap samples; suggestion 1000}
 
 \item{n_cores}{number of cores to use in the parallel computing}
 
-\item{useFest}{1 (default) to use the first estimated parameters as starting value for the bootstrap, 0 otherwise}
+\item{useFest}{TRUE (default) to use the first estimated parameters as starting value for the bootstrap, FALSE otherwise}
 }
 \value{
 \item{pvalue}{pvalue of the Cramer-von Mises statistic in percent}
@@ -83,5 +83,13 @@ GofHMMGen(
 \item{runs_e}{Estimated number of runs using eta}
 }
 \description{
-This function performs goodness-of-fit test of an univariate hidden Markov model
+This function performs a goodness-of-fit test for a univariate hidden Markov model
+}
+\examples{
+family = "gaussian"
+Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; theta = matrix(c(0, 1.7, 0, 1),2,2) ;
+y = SimHMMGen(theta, size=0, Q, ZI=1, family,  100)$SimData
+out=GofHMMGen(y,1,2,family,n_samples=10)
+
+
 }

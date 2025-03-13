@@ -1,11 +1,11 @@
-#'@title Transform constrained parameters  to unconstrained parameters
+#'@title Transform constrained parameters to unconstrained parameters
 #'
-#'@description This function computes the unconstrained parameters alpha of a univariate distribution corresponding to constrainted parameters theta.
+#'@description This function computes the unconstrained parameters alpha of a univariate distribution corresponding to constrained parameters theta.
 #'
 #'@param family distribution name; run the command distributions() for help
-#'@param param  constrained parameters of the univariate distribution
+#'@param theta  constrained parameters of the univariate distribution
 #'
-#'@return \item{alpha}{constrained parameters}
+#'@return \item{alpha}{unconstrained parameters}
 #'
 #'
 #'
@@ -13,7 +13,7 @@
 #'@keywords internal
 
 
-theta2alpha<-function(family,param){
+theta2alpha<-function(family,theta){
 
 
   switch(family,
@@ -21,27 +21,18 @@ theta2alpha<-function(family,param){
          "asymexppower" = {    ## [R+, R+, 01]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = log(param[3]/(1-param[3]))
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = log(theta[3]/(1-theta[3]))
 
          } ,
 
-
-         "asymlaplace" = {    ## [R, R+, R+]
-
-
-           alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1]/(1-param[1]))
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = log(theta[1]/(1-theta[1]))
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -49,9 +40,9 @@ theta2alpha<-function(family,param){
          "asymt" = {    ## [R+, R+, 01]
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = log(param[3]/(1-param[3]))
-           alpha[4] = param[4]
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = log(theta[3]/(1-theta[3]))
+           alpha[4] = theta[4]
 
          } ,
 
@@ -60,7 +51,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -68,8 +59,8 @@ theta2alpha<-function(family,param){
          "benini" = {     ## [R, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -77,12 +68,12 @@ theta2alpha<-function(family,param){
          "benford" = {     ## [1 ou 2]
 
            alpha = matrix(0,1,1)
-           if (param[1]>log(2)){
+           if (theta[1]>log(2)){
              alpha[1] = log(2)
-           } else if (param[1]<0){
+           } else if (theta[1]<0){
              alpha[1] = 0
            } else {
-             alpha[1] = log(param[1])
+             alpha[1] = log(theta[1])
            }
 
          } ,
@@ -91,7 +82,7 @@ theta2alpha<-function(family,param){
          "bernoulli" = {     ## [01]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1]/(1-param[1]))
+           alpha[1] = log(theta[1]/(1-theta[1]))
 
          } ,
 
@@ -99,7 +90,7 @@ theta2alpha<-function(family,param){
          "beta" = {     ## [R+, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -108,7 +99,7 @@ theta2alpha<-function(family,param){
          "betabinomial" = {     ## [N+, R+, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -116,7 +107,7 @@ theta2alpha<-function(family,param){
          "betageometric" = {     ## [R+, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -124,7 +115,7 @@ theta2alpha<-function(family,param){
          "betanegativebinomial" = {     ## [N+, R+, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -132,7 +123,7 @@ theta2alpha<-function(family,param){
          "betaburr" = {     ## [R+, R+, R+, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -141,7 +132,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -150,7 +141,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -159,7 +150,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -168,7 +159,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -177,9 +168,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4])
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4])
 
          } ,
 
@@ -188,7 +179,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -196,9 +187,9 @@ theta2alpha<-function(family,param){
          "betalognormal" = {     ## [R+, R+, R, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4])
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4])
 
          } ,
 
@@ -207,7 +198,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -217,9 +208,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4])
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4])
 
          } ,
 
@@ -228,7 +219,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -237,7 +228,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -246,8 +237,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -255,7 +246,7 @@ theta2alpha<-function(family,param){
          "binomial" = {     ## [N+, 01]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1]/(1-param[1]))
+           alpha[1] = log(theta[1]/(1-theta[1]))
 
          } ,
 
@@ -263,8 +254,8 @@ theta2alpha<-function(family,param){
          "birnbaumsaunders" = {     ## [R+, R+, R]
 
            alpha = matrix(0,1,3)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
 
          } ,
 
@@ -273,7 +264,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -282,7 +273,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -291,7 +282,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -300,8 +291,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -310,7 +301,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -319,7 +310,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -328,7 +319,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -337,8 +328,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
 
          } ,
 
@@ -347,7 +338,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -357,7 +348,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -365,8 +356,8 @@ theta2alpha<-function(family,param){
          "diffzeta" = {     ## [R+, >1]
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1])
-           alpha[2] = log(exp(-param[2]) + 1)
+           alpha[1] = log(theta[1])
+           alpha[2] = log(exp(-theta[2]) + 1)
 
          } ,
 
@@ -374,7 +365,7 @@ theta2alpha<-function(family,param){
          "discretegamma" = {     ## [R+, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -382,8 +373,8 @@ theta2alpha<-function(family,param){
          "discretelaplace" = {     ## [R, 01]
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])/(1-param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])/(1-theta[2])
 
          } ,
 
@@ -391,8 +382,8 @@ theta2alpha<-function(family,param){
          "discretenormal" = {     ## [R, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -400,8 +391,8 @@ theta2alpha<-function(family,param){
          "discreteweibull" = {     ## [01, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1]/(1-param[1]))
-           alpha[2] = log(param[2])
+           alpha[1] = log(theta[1]/(1-theta[1]))
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -409,9 +400,9 @@ theta2alpha<-function(family,param){
          "doubleweibull" = {     ## [R+, R, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1])
-           alpha[2] = param[2]
-           alpha[3] = log(param[3])
+           alpha[1] = log(theta[1])
+           alpha[2] = theta[2]
+           alpha[3] = log(theta[3])
 
          } ,
 
@@ -420,8 +411,8 @@ theta2alpha<-function(family,param){
 
            ## [R, R+]
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -430,7 +421,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -439,7 +430,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -448,8 +439,8 @@ theta2alpha<-function(family,param){
          "exponentialgeometric" = {     ## [R+, 01]
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1])
-           alpha[2] = log(param[2]/(1-param[2]))
+           alpha[1] = log(theta[1])
+           alpha[2] = log(theta[2]/(1-theta[2]))
 
          } ,
 
@@ -458,8 +449,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1])
-           alpha[2] = log(param[2]/(1-param[2]))
+           alpha[1] = log(theta[1])
+           alpha[2] = log(theta[2]/(1-theta[2]))
 
          } ,
 
@@ -468,7 +459,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -477,8 +468,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -487,7 +478,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -496,7 +487,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -505,7 +496,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -515,7 +506,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -523,8 +514,8 @@ theta2alpha<-function(family,param){
          "fellerpareto" = {     ## [R(mini), R+, R+, R+, R+]
 
            alpha = matrix(0,1,5)
-           alpha[1] = param[1]
-           alpha[2:5] = log(param[2:5])
+           alpha[1] = theta[1]
+           alpha[2:5] = log(theta[2:5])
 
          } ,
 
@@ -532,7 +523,7 @@ theta2alpha<-function(family,param){
          "fisk" = {     ## [R+, R+]
 
             alpha = matrix(0,1,2)
-            alpha[1:2] = log(param[1:2])
+            alpha[1:2] = log(theta[1:2])
          } ,
 
 
@@ -540,8 +531,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -549,9 +540,9 @@ theta2alpha<-function(family,param){
          "frechet" = {     ## [R+, R, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1])
-           alpha[2] = param[2]
-           alpha[3] = log(param[3])
+           alpha[1] = log(theta[1])
+           alpha[2] = theta[2]
+           alpha[3] = log(theta[3])
 
          } ,
 
@@ -560,7 +551,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -568,7 +559,7 @@ theta2alpha<-function(family,param){
          "gammapoisson" = {     ## [R+, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -576,8 +567,8 @@ theta2alpha<-function(family,param){
          "gaussian" = {     ## [R, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -585,9 +576,9 @@ theta2alpha<-function(family,param){
          "gev" = {     ## [R, R+, R]
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
 
          } ,
 
@@ -596,7 +587,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -605,9 +596,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1])
-           alpha[2] = param[2]
-           alpha[3] = log(param[3])
+           alpha[1] = log(theta[1])
+           alpha[2] = theta[2]
+           alpha[3] = log(theta[3])
 
          } ,
 
@@ -616,9 +607,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1])
-           alpha[2] = param[2]
-           alpha[3] = log(param[3])
+           alpha[1] = log(theta[1])
+           alpha[2] = theta[2]
+           alpha[3] = log(theta[3])
 
          } ,
 
@@ -627,9 +618,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4])
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4])
 
          } ,
 
@@ -637,7 +628,7 @@ theta2alpha<-function(family,param){
          "geometric" = {     ## [01]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1]/(1-param[1]))
+           alpha[1] = log(theta[1]/(1-theta[1]))
 
          } ,
 
@@ -646,11 +637,11 @@ theta2alpha<-function(family,param){
          "generalizedhyperbolic" = {     ## [R, R+, R+, R, R]  [mu, delta, alpha, beta, lambda] (avec alpha^2 > beta^2)
 
            alpha = matrix(0,1,5)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = log(param[3])
-           alpha[4] = log( (param[4]+param[3]) / (param[3]-param[4]) )
-           alpha[5] = param[5]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = log(theta[3])
+           alpha[4] = log( (theta[4]+theta[3]) / (theta[3]-theta[4]) )
+           alpha[5] = theta[5]
 
          } ,
 
@@ -658,10 +649,10 @@ theta2alpha<-function(family,param){
          "generalizedlambda" = {     ## [R, R+, R, R]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
-           alpha[4] = param[4]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
+           alpha[4] = theta[4]
 
          } ,
 
@@ -669,8 +660,8 @@ theta2alpha<-function(family,param){
          "generalizedt" = {     ## [R, R+, R+, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2:4] = log(param[2:4])
+           alpha[1] = theta[1]
+           alpha[2:4] = log(theta[2:4])
 
          } ,
 
@@ -679,7 +670,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -688,9 +679,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
 
          } ,
 
@@ -699,8 +690,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -709,7 +700,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -718,7 +709,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -727,7 +718,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -736,7 +727,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -745,7 +736,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -753,7 +744,7 @@ theta2alpha<-function(family,param){
          "hjorth" = {     ## [R+, R+, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -761,9 +752,9 @@ theta2alpha<-function(family,param){
          "hblaplace" = {     ## [01, R, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1]/(1-param[1]))
-           alpha[2] = param[2]
-           alpha[3] = log(param[3])
+           alpha[1] = log(theta[1]/(1-theta[1]))
+           alpha[2] = theta[2]
+           alpha[3] = log(theta[3])
 
          } ,
 
@@ -771,10 +762,10 @@ theta2alpha<-function(family,param){
          "hyperbolic" = {     ## [R, R+, R+, R]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = log(param[3])
-           alpha[4] = log( (param[4]+param[3]) / (param[3]-param[4]) )
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = log(theta[3])
+           alpha[4] = log( (theta[4]+theta[3]) / (theta[3]-theta[4]) )
 
          } ,
 
@@ -782,7 +773,7 @@ theta2alpha<-function(family,param){
          "hzeta" = {     ## [R+]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -791,8 +782,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -801,7 +792,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -810,7 +801,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -819,7 +810,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -828,7 +819,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -837,7 +828,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -846,7 +837,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -855,7 +846,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -864,7 +855,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -873,7 +864,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -882,7 +873,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -891,7 +882,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -900,7 +891,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -909,7 +900,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -918,7 +909,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -927,9 +918,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4])
+           alpha[1:2] = log(theta[1:2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4])
 
          } ,
 
@@ -938,7 +929,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -946,7 +937,7 @@ theta2alpha<-function(family,param){
          "kumaraswamyloglogistic" = {     ## [R+, R+, R, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -954,8 +945,8 @@ theta2alpha<-function(family,param){
          "kumaraswamynormal" = {     ## [R, R+, R+, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2:4] = log(param[2:4])
+           alpha[1] = theta[1]
+           alpha[2:4] = log(theta[2:4])
 
          } ,
 
@@ -964,7 +955,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -974,8 +965,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -984,8 +975,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -994,7 +985,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1003,7 +994,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -1012,7 +1003,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1021,8 +1012,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1032,8 +1023,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -1041,28 +1032,21 @@ theta2alpha<-function(family,param){
          "loggumbel" = {     ## [R, R+]
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
 
-         "loglaplace" = {     ## [R, R+, R+]
 
-
-           alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
-
-         } ,
 
 
          "loglog" = {     ## [R+, >1]
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(exp(-param[2]) + 1)
+           alpha[1] = theta[1]
+           alpha[2] = log(exp(-theta[2]) + 1)
 
          } ,
 
@@ -1071,7 +1055,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1080,8 +1064,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1090,9 +1074,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
 
          } ,
 
@@ -1101,8 +1085,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1111,7 +1095,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1120,7 +1104,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1128,7 +1112,7 @@ theta2alpha<-function(family,param){
          "logseries" = {     ## [01]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1]/(1-param[1]))
+           alpha[1] = log(theta[1]/(1-theta[1]))
 
          } ,
 
@@ -1137,7 +1121,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1146,7 +1130,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1155,7 +1139,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -1164,8 +1148,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -1174,7 +1158,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1183,7 +1167,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1192,7 +1176,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1201,7 +1185,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1210,7 +1194,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1218,7 +1202,7 @@ theta2alpha<-function(family,param){
          "negativebinomial" = {     ## [N+, 01]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1]/(1-param[1]))
+           alpha[1] = log(theta[1]/(1-theta[1]))
 
          } ,
 
@@ -1226,10 +1210,10 @@ theta2alpha<-function(family,param){
          "normalinversegaussian" = {     ## [R, R+, R+, R]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = log(param[3])
-           alpha[4] = log( (param[4]+param[3]) / (param[3]-param[4]) )
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = log(theta[3])
+           alpha[4] = log( (theta[4]+theta[3]) / (theta[3]-theta[4]) )
 
          } ,
 
@@ -1238,8 +1222,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1:2] = log(param[1:2])
-           alpha[3:4] = param[3:4]
+           alpha[1:2] = log(theta[1:2])
+           alpha[3:4] = theta[3:4]
 
          } ,
 
@@ -1249,7 +1233,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1258,7 +1242,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -1267,7 +1251,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1276,7 +1260,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1285,8 +1269,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -1295,8 +1279,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -1305,8 +1289,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2:4] = log(param[2:4])
+           alpha[1] = theta[1]
+           alpha[2:4] = log(theta[2:4])
 
          } ,
 
@@ -1315,7 +1299,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1324,8 +1308,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1])
-           alpha[2] = param[2]
+           alpha[1] = log(theta[1])
+           alpha[2] = theta[2]
 
          } ,
 
@@ -1333,7 +1317,7 @@ theta2alpha<-function(family,param){
          "poisson" = {     ## [R+]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
          } ,
 
 
@@ -1342,7 +1326,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
          } ,
 
 
@@ -1350,7 +1334,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -1359,7 +1343,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1368,8 +1352,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -1378,7 +1362,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1])
+           alpha[1] = log(theta[1])
 
          } ,
 
@@ -1387,9 +1371,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = log(param[1])
-           alpha[2] = param[2]
-           alpha[3] = log(param[3])
+           alpha[1] = log(theta[1])
+           alpha[2] = theta[2]
+           alpha[3] = log(theta[3])
 
          } ,
 
@@ -1399,7 +1383,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1408,7 +1392,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1417,7 +1401,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1427,8 +1411,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1]/ (1-param[1]))
-           alpha[2] = log(param[2])
+           alpha[1] = log(theta[1]/ (1-theta[1]))
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1437,8 +1421,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2:3] = log(param[2:3])
+           alpha[1] = theta[1]
+           alpha[2:3] = log(theta[2:3])
 
          } ,
 
@@ -1447,7 +1431,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1455,10 +1439,10 @@ theta2alpha<-function(family,param){
          "skewedtfourparam" = {     ## [R, R+, R, R+(<25)]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4]/(25-param[4]))
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4]/(25-theta[4]))
 
          } ,
 
@@ -1466,9 +1450,9 @@ theta2alpha<-function(family,param){
          "skewednormal" = {     ## [R, R+, R, R]
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
 
          } ,
 
@@ -1476,10 +1460,10 @@ theta2alpha<-function(family,param){
          "skewedgeneralizedt" = {     ## [R, R+, -1+1, R+(>1), R+(>1)]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = log( (param[3]+param[2]) / (param[2]-param[3]) )
-           alpha[4] = log(exp(-param[4]) + 1)
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = log( (theta[3]+theta[2]) / (theta[2]-theta[3]) )
+           alpha[4] = log(exp(-theta[4]) + 1)
 
          } ,
 
@@ -1487,10 +1471,10 @@ theta2alpha<-function(family,param){
          "skewedexponentialpower" = {     ## [R, R+, R, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = param[3]
-           alpha[4] = log(param[4])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = theta[3]
+           alpha[4] = log(theta[4])
 
          } ,
 
@@ -1500,8 +1484,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1510,7 +1494,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1519,9 +1503,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3] = log(param[3]/(25-param[3]))
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3] = log(theta[3]/(25-theta[3]))
 
          } ,
 
@@ -1531,8 +1515,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1540,7 +1524,7 @@ theta2alpha<-function(family,param){
          "topple" = {     ## [01]
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(param[1]/(1-param[1]))
+           alpha[1] = log(theta[1]/(1-theta[1]))
 
          } ,
 
@@ -1548,7 +1532,7 @@ theta2alpha<-function(family,param){
          "transformedbeta" = {     ## [R+, R+, R+, R+]
 
            alpha = matrix(0,1,4)
-           alpha[1:4] = log(param[1:4])
+           alpha[1:4] = log(theta[1:4])
 
          } ,
 
@@ -1556,7 +1540,7 @@ theta2alpha<-function(family,param){
          "transformedgamma" = {     ## [R+, R+, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1566,9 +1550,9 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,4)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
-           alpha[3:4] = param[3:4]
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
+           alpha[3:4] = theta[3:4]
 
          } ,
 
@@ -1577,7 +1561,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1586,8 +1570,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = log(param[1]/(1-param[1]))
-           alpha[2] = log(param[2])
+           alpha[1] = log(theta[1]/(1-theta[1]))
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1596,8 +1580,8 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1] = param[1]
-           alpha[2] = log(param[2])
+           alpha[1] = theta[1]
+           alpha[2] = log(theta[2])
 
          } ,
 
@@ -1606,7 +1590,7 @@ theta2alpha<-function(family,param){
 
 
            alpha = matrix(0,1,2)
-           alpha[1:2] = log(param[1:2])
+           alpha[1:2] = log(theta[1:2])
 
          } ,
 
@@ -1614,7 +1598,7 @@ theta2alpha<-function(family,param){
          "xie" = {     ## [R+, R+, R+]
 
            alpha = matrix(0,1,3)
-           alpha[1:3] = log(param[1:3])
+           alpha[1:3] = log(theta[1:3])
 
          } ,
 
@@ -1622,7 +1606,7 @@ theta2alpha<-function(family,param){
          "yules" = {     ## [R+] >0.5
 
            alpha = matrix(0,1,1)
-           alpha[1] = log(exp(-param[1]) + 0.5)
+           alpha[1] = log(exp(-theta[1]) + 0.5)
 
          } ,
 

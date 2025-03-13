@@ -1,10 +1,9 @@
 #'Markov chain simulation
 #'
-#'@description This function generates a Markov chain X(1), ..., X(n) with transition matrix Q,
-#' starting from a state eta0 or the uniform distribution on {1,..., r}
+#'@description This function generates a Markov chain X(1), ..., X(n) with transition matrix Q, starting from a state eta0 or the uniform distribution on 1,..., r.
 #'
-#'@param  Q transition probability matrix
-#'@param  n number of simulated vectors
+#'@param  Q    transition probability matrix
+#'@param  n    number of simulated vectors
 #'@param  eta0 initial value in 1,...,r.
 #'
 #'@return \item{x}{Generated Markov chain}

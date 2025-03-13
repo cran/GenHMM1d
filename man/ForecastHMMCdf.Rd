@@ -4,22 +4,36 @@
 \alias{ForecastHMMCdf}
 \title{Forecasted cumulative distribution function of a univariate HMM at times n+k1, n+k2,....}
 \usage{
-ForecastHMMCdf(y, family, theta, Q, eta, k = 1, graph = 0)
+ForecastHMMCdf(
+  x,
+  ZI = 0,
+  family,
+  theta,
+  Q,
+  eta,
+  size = 0,
+  k = 1,
+  graph = FALSE
+)
 }
 \arguments{
-\item{y}{points at which the cdf function is comptuted}
+\item{x}{points at which the cdf function is computed}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{family}{distribution name; run the function distributions() for help}
 
 \item{theta}{parameters; (r  x p)}
 
-\item{Q}{probability transition  matrix; (r  x r)}
+\item{Q}{probability transition matrix for the regimes; (r  x r)}
 
 \item{eta}{vector of the estimated probability of each regime at time n; (1 x r)}
 
-\item{k}{times of prediction.}
+\item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 
-\item{graph}{(0 or else) produce plots}
+\item{k}{prediction times}
+
+\item{graph}{TRUE to produce plots (FALSE by default).}
 }
 \value{
 \item{cdf}{values of the cdf function}
@@ -29,16 +43,12 @@ This function computes the forecasted cumulative distribution function of a univ
 }
 \examples{
 family = "gaussian"
-lb = -6
-ub = 6
-
-
 theta = matrix(c(-1.5, 1.7, 1, 1),2,2)
 Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2)
-eta = c(0.96091218, 0.03908782)
-
-forecastedhmmcdf = ForecastHMMCdf(y=seq(from=-6, to=6, by=0.1), family=family,
-theta= theta, Q=Q, eta=eta, k=c(1,5,10,20), graph=1)
+eta = c(0.96, 0.04)
+x=seq(from=-6, to=6, by=0.1)
+k=c(1,5,10,20)
+cdf = ForecastHMMCdf(x, 0, family, theta, Q, eta, size=0, k, graph=TRUE)
 
 
 }

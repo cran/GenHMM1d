@@ -26,12 +26,7 @@ PDF_unc<-function(family,y,param,size=0){
          } ,
 
 
-         "asymlaplace" = {    ## [R, R+, R+]
 
-
-           f = VGAM::dalap(y, location = param[1], scale = exp(param[2]), kappa = exp(param[3]))
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
@@ -919,13 +914,6 @@ PDF_unc<-function(family,y,param,size=0){
 
          } ,
 
-
-         "loglaplace" = {     ## [R, R+, R+]
-
-
-           f = VGAM::dloglap(y, location.ald = param[1], scale.ald = exp(param[2]), kappa = exp(param[3]))
-
-         } ,
 
 
          "loglog" = {     ## [R+, >1]

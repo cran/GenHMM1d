@@ -1,10 +1,10 @@
 #'@title Expected shortfall function
 #'
-#'@description This function compute the expected shortfall of an univariate distribution
+#'@description This function computes the expected shortfall of an univariate distribution, excluding zero-inflated.
 #'
-#'@param family   distribution name; run the function distributions() for help
 #'@param p  value (1  x 1) at which the expected shortfall needs to be computed; between 0 and 1; (e.g 0.01, 0.05)
 #'@param param  parameters of the distribution; (1 x p)
+#'@param family   distribution name; run the function distributions() for help
 #'@param size additional parameter for some discrete distributions; run the command distributions() for help
 #'@param Nsim number of simulations
 #'
@@ -13,8 +13,8 @@
 #'@examples
 #'family = "gaussian"
 #'
-#'theta = matrix(c(-1.5, 1.7),1,2) ;
-#'es = ES(family, (0.01), theta)
+#'theta = c(-1.5, 1.7) ;
+#'es = ES( 0.01, theta, family)
 #'print('Expected shortfall : ')
 #'print(es$es)
 #'
@@ -23,21 +23,21 @@
 
 
 
-ES<-function(family, p, param, size=0, Nsim=25000){
+ES<-function(p, param, family,  size=0, Nsim=25000){
 
-  var = QUANTILE(family, p, param, size)
+  var = QUANTILE(p, param, family,  size)
 
   param_sim = matrix(param, nrow = 1, ncol = length(param))
 
-  sim = SimHMMGen(1, family, param_sim, Nsim)
+  sim = SimHMMGen(param_sim, size=0, 1, ZI=0, family,  Nsim)
 
   diffp = sim$SimData-var
 
   diffp[diffp>0] = 0
 
-  es = var + (1/(1-p)) * base::mean(replace(diffp, diffp == 0, NA), na.rm = TRUE)
+  es = var + (1/(1-p)) * mean(replace(diffp, diffp == 0, NA), na.rm = TRUE)
 
-  out = list(es=es, var=var, sim=sim)
+  out = list(es=es, var=var)
   return(out)
 
 

@@ -2,18 +2,20 @@
 % Please edit documentation in R/ForecastHMMeta.R
 \name{ForecastHMMeta}
 \alias{ForecastHMMeta}
-\title{Predicted probabilities of regimes of a univariate HMM given a new observation}
+\title{Predicted probabilities of regimes of a univariate HMM for a new observation}
 \usage{
-ForecastHMMeta(ynew, family, theta, Q, eta)
+ForecastHMMeta(ynew, ZI = 0, family, theta, Q, eta)
 }
 \arguments{
-\item{ynew}{the new observations}
+\item{ynew}{new observations}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{family}{distribution name; run the function distributions() for help}
 
 \item{theta}{parameters; (r  x p)}
 
-\item{Q}{probability transition  matrix; (r  x r)}
+\item{Q}{probability transition  matrix for the regimes; (r  x r)}
 
 \item{eta}{vector of the estimated probability of each regime at time n; (1  x r)}
 }
@@ -25,13 +27,9 @@ This function computes the predicted probabilities of the regimes for a new obse
 }
 \examples{
 family = "gaussian"
-
 theta = matrix(c(-1.5, 1.7, 1, 1),2,2)
 Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2)
-eta = c(0.96091218, 0.03908782)
-
-forecastedhmmeta = ForecastHMMeta(c(1.5), family, theta=theta, Q=Q, eta=eta)
-print('Forecasted regime probabilities : ')
-print(forecastedhmmeta)
+eta = c(0.96, 0.04)
+ForecastHMMeta(1.5, 0, family, theta, Q, eta)
 
 }

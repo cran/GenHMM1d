@@ -3,9 +3,9 @@
 #'@description This function computes the cumulative distribution function (cdf) of a univariate distribution
 #'
 #'@param family  distribution name; run the function distributions() for help
-#'@param y  observations
-#'@param param  parameters of the distribution; (1 x p)
-#'@param size additional parameter for some discrete distributions; run the command distributions() for help
+#'@param y       values at which the cdf is evaluated
+#'@param param   parameters of the distribution; (1 x p)
+#'@param size    additional parameter for some discrete distributions; run the command distributions() for help
 #'
 #'@return \item{f}{cdf}
 #'
@@ -27,12 +27,6 @@ CDF<-function(family,y,param,size=0){
          } ,
 
 
-         "asymlaplace" = {    ## [R, R+, R+]
-
-
-           f = VGAM::palap(y, location = param[1], scale = param[2], kappa = param[3])
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
@@ -920,13 +914,6 @@ CDF<-function(family,y,param,size=0){
 
          } ,
 
-
-         "loglaplace" = {     ## [R, R+, R+]
-
-
-           f = VGAM::ploglap(y, location.ald = param[1], scale.ald = param[2], kappa = param[3])
-
-         } ,
 
 
          "loglog" = {     ## [R+, >1]

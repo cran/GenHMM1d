@@ -2,7 +2,7 @@
 % Please edit documentation in R/CDF_est.R
 \name{CDF_est}
 \alias{CDF_est}
-\title{Cumulative density function}
+\title{Cumulative distribution function}
 \usage{
 CDF_est(family, y, param, size = 0, u_Ros = 0)
 }
@@ -15,12 +15,12 @@ CDF_est(family, y, param, size = 0, u_Ros = 0)
 
 \item{size}{additional parameter for some discrete distributions}
 
-\item{u_Ros}{used internally for the computation of the Rosenblatt transform for univariate discrete distribution}
+\item{u_Ros}{used internally for the computation of the Rosenblatt transform for non continuous distributions}
 }
 \value{
 \item{f}{cdf}
 }
 \description{
-This function compute the cumulative density function of an univariate distribution (used) in the CVM calculation
+This function computes the cumulative distribution function of an univariate distribution (used) in the CVM calculation
 }
 \keyword{internal}

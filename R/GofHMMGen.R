@@ -1,19 +1,19 @@
 #'@title Goodness-of-fit of univariate hidden Markov model
 #'
-#'@description This function performs goodness-of-fit test of an univariate hidden Markov model
+#'@description This function performs a goodness-of-fit test for a univariate hidden Markov model
 #'
 #'
-#'@param y   observations
-#'@param reg    number of regimes
-#'@param family   distribution name; run the function distributions() for help
-#'@param start  starting parameter for the estimation
+#'@param y         observations
+#'@param ZI        1 if zero-inflated, 0 otherwise (default)
+#'@param reg       number of regimes
+#'@param family    distribution name; run the function distributions() for help
+#'@param start     starting parameter for the estimation
 #'@param max_iter  maximum number of iterations of the EM algorithm; suggestion 10000
-#'@param eps precision (stopping criteria); suggestion 0.0001.
-#'@param graph 1 for a graph, 0 otherwise (default); only for continuous distributions
-#'@param size additional parameter for some discrete distributions; run the command distributions() for help
-#'@param n_sample number of bootstrap samples; suggestion 1000
-#'@param n_cores number of cores to use in the parallel computing
-#'@param useFest 1 (default) to use the first estimated parameters as starting value for the bootstrap, 0 otherwise
+#'@param eps       precision (stopping criteria); suggestion 0.0001.
+#'@param size      additional parameter for some discrete distributions; run the command distributions() for help
+#'@param n_samples number of bootstrap samples; suggestion 1000
+#'@param n_cores   number of cores to use in the parallel computing
+#'@param useFest   TRUE (default) to use the first estimated parameters as starting value for the bootstrap, FALSE otherwise
 #'
 #'
 #'@return \item{pvalue}{pvalue of the Cramer-von Mises statistic in percent}
@@ -41,19 +41,24 @@
 #'@import doParallel
 #'
 #'
+#'@examples
+#'family = "gaussian"
+#'Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; theta = matrix(c(0, 1.7, 0, 1),2,2) ;
+#'y = SimHMMGen(theta, size=0, Q, ZI=1, family,  100)$SimData
+#'out=GofHMMGen(y,1,2,family,n_samples=10)
+#'
+#'
 #'@export
 #'
 #'
 #'
-GofHMMGen <-function(y, reg, family, start=0, max_iter=10000, eps=10e-4, graph=0, size=0, n_sample=100, n_cores=1, useFest=1){
+GofHMMGen <-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, size=0, n_samples=1000, n_cores=1, useFest=TRUE){
   cl <- parallel::makePSOCKcluster(n_cores)
   doParallel::registerDoParallel(cl)
 
-  if (family != "negativebinomial" && family != "binomial" && family != "betanegativebinomial" && family != "betabinomial") {
-    size=0
-  }
+  if( (family %in% c("negativebinomial","binomial", "betanegativebinomial", "betabinomial")) == FALSE){size=0}
 
-  esthmmgen = EstHMMGen(y, reg=reg, family=family, start=start, max_iter=max_iter, eps=eps, size=size)
+  esthmmgen = EstHMMGen(y, ZI, reg, family, start, max_iter, eps, size)
   theta = esthmmgen$theta
   Q = esthmmgen$Q
   eta = esthmmgen$eta
@@ -74,16 +79,16 @@ GofHMMGen <-function(y, reg, family, start=0, max_iter=10000, eps=10e-4, graph=0
   runs_e = esthmmgen$runs_e
   runs_l = esthmmgen$runs_l
 
-  eta0 = sample(1:reg, n_sample, replace = T)
+  eta0 = sample(1:reg, n_samples, replace = T)
   n = length(y);
 
-  print("First estimation done")
-
-  result <- foreach::foreach(i=1:n_sample, .packages="GenHMM1d") %dopar% bootstrapfun(Q, family, theta, n, size, max_iter, eps, useFest)
 
 
-  cvm_sim1 = rep(0,n_sample)
-  for (i in 1:n_sample){
+  result <- foreach::foreach(i=1:n_samples, .packages="GenHMM1d") %dopar% bfun(theta, Q, ZI, family, n, size, max_iter, eps, useFest)
+
+
+  cvm_sim1 = rep(0,n_samples)
+  for (i in 1:n_samples){
     cvm_sim1[i] = result[[i]]$cvm_sim
   }
 

@@ -1,12 +1,12 @@
-#'@title Cumulative density function
+#'@title Cumulative distribution function
 #'
-#'@description This function compute the cumulative density function of an univariate distribution (used) in the CVM calculation
+#'@description This function computes the cumulative distribution function of an univariate distribution (used) in the CVM calculation
 #'
 #'@param family   distribution name; run the command distributions() for help
-#'@param y  observations
-#'@param param  parameters of the distribution
-#'@param size additional parameter for some discrete distributions
-#'@param u_Ros used internally for the computation of the Rosenblatt transform for univariate discrete distribution
+#'@param y        observations
+#'@param param    parameters of the distribution
+#'@param size     additional parameter for some discrete distributions
+#'@param u_Ros    used internally for the computation of the Rosenblatt transform for non continuous distributions
 #'
 #'@return \item{f}{cdf}
 #'
@@ -28,11 +28,6 @@ CDF_est<-function(family,y,param,size=0,u_Ros=0){
          } ,
 
 
-         "asymlaplace" = {    ## [R, R+, R+]
-
-           f = VGAM::palap(y, location = param[1], scale = param[2], kappa = param[3])
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
@@ -929,12 +924,6 @@ CDF_est<-function(family,y,param,size=0,u_Ros=0){
          } ,
 
 
-         "loglaplace" = {     ## [R, R+, R+]
-
-
-           f = VGAM::ploglap(y, location.ald = param[1], scale.ald = param[2], kappa = param[3])
-
-         } ,
 
 
          "loglog" = {     ## [R+, >1]

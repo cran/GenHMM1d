@@ -2,19 +2,19 @@
 % Please edit documentation in R/alpha2theta.R
 \name{alpha2theta}
 \alias{alpha2theta}
-\title{Transforms unconstrained parameters to constrainted  parameters}
+\title{Transformation of unconstrained parameters to constrained  parameters}
 \usage{
-alpha2theta(family, param)
+alpha2theta(family, alpha)
 }
 \arguments{
 \item{family}{distribution name; run the command distributions() for help}
 
-\item{param}{unconstrained parameters of the univariate distribution}
+\item{alpha}{unconstrained parameters of the univariate distribution}
 }
 \value{
 \item{theta}{constrained parameters}
 }
 \description{
-This function computes the constrained  parameters theta of a univariate distribution from the unconstrainted parameter alpha.
+This function computes the constrained  parameters theta of a univariate distribution, from the unconstrained parameter alpha.
 }
 \keyword{internal}

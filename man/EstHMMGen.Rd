@@ -6,20 +6,23 @@
 \usage{
 EstHMMGen(
   y,
+  ZI = 0,
   reg,
   family,
   start = 0,
   max_iter = 10000,
-  eps = 0.001,
-  graph = 0,
+  eps = 1e-04,
   size = 0,
-  theta0 = 0
+  theta0 = NULL,
+  graph = FALSE
 )
 }
 \arguments{
 \item{y}{observations; (n x 1)}
 
-\item{reg}{number of regimes}
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
+
+\item{reg}{number of regimes (including zero-inflated; must be > ZI)}
 
 \item{family}{distribution name; run the function distributions() for help}
 
@@ -29,16 +32,16 @@ EstHMMGen(
 
 \item{eps}{precision (stopping criteria); suggestion 0.001.}
 
-\item{graph}{1 for a graph, 0 otherwise (default); only for continuous distributions}
-
 \item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 
-\item{theta0}{initial parameters for each regimes; (r x p)}
+\item{theta0}{initial parameters for each regimes; (r x p), default is NULL}
+
+\item{graph}{TRUE a graph, FALSE otherwise (default); only for continuous distributions}
 }
 \value{
 \item{theta}{ estimated parameters; (r x p)}
 
-\item{Q}{estimated transition matrix; (r x r)}
+\item{Q}{estimated transition matrix for the regimes; (r x r)}
 
 \item{eta}{conditional probabilities of being in regime k at time t given observations up to time t; (n x r) }
 
@@ -82,9 +85,10 @@ This function estimates the parameters from a univariate hidden Markov model
 }
 \examples{
 family = "gaussian"
-Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
-sim = SimHMMGen(Q, family, theta, 10)$SimData ;
-est = EstHMMGen(y=sim, reg=2, family=family)
+Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ;
+theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
+y = SimHMMGen(theta, Q=Q, family=family,  n=100)$SimData
+est = EstHMMGen(y, reg=2, family=family)
 
 
 

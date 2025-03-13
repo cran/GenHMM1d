@@ -1,9 +1,9 @@
-#'@title Transforms unconstrained parameters to constrainted  parameters
+#'@title Transformation of unconstrained parameters to constrained  parameters
 #'
-#'@description This function computes the constrained  parameters theta of a univariate distribution from the unconstrainted parameter alpha.
+#'@description This function computes the constrained  parameters theta of a univariate distribution, from the unconstrained parameter alpha.
 #'
 #'@param family distribution name; run the command distributions() for help
-#'@param param  unconstrained parameters of the univariate distribution
+#'@param alpha  unconstrained parameters of the univariate distribution
 #'
 #'@return \item{theta}{constrained parameters}
 #'
@@ -12,7 +12,7 @@
 #'@keywords internal
 
 
-alpha2theta<-function(family,param){
+alpha2theta<-function(family,alpha){
 
 
   switch(family,
@@ -20,27 +20,18 @@ alpha2theta<-function(family,param){
          "asymexppower" = {    ## [R+, R+, 01]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = 1/(1+exp(-param[3]))
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = 1/(1+exp(-alpha[3]))
 
          } ,
 
-
-         "asymlaplace" = {    ## [R, R+, R+]
-
-
-           theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
 
            theta = matrix(0,1,3)
-           theta[1] = 1/(1+exp(-param[1]))
-           theta[2:3] = exp(param[2:3])
+           theta[1] = 1/(1+exp(-alpha[1]))
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -48,9 +39,9 @@ alpha2theta<-function(family,param){
          "asymt" = {    ## [R+, R+, 01, R]
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = 1/(1+exp(-param[3]))
-           theta[4] = param[4]
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = 1/(1+exp(-alpha[3]))
+           theta[4] = alpha[4]
 
          } ,
 
@@ -59,7 +50,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -67,8 +58,8 @@ alpha2theta<-function(family,param){
          "benini" = {     ## [R, R+]
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -76,12 +67,12 @@ alpha2theta<-function(family,param){
          "benford" = {     ## [1 ou 2]
 
            theta = matrix(0,1,1)
-           if (param[1]>2){
+           if (alpha[1]>2){
              theta[1] = 2
-           } else if (param[1]<1){
+           } else if (alpha[1]<1){
              theta[1] = 1
            } else {
-             theta[1] = round(param[1])
+             theta[1] = round(alpha[1])
            }
 
          } ,
@@ -90,7 +81,7 @@ alpha2theta<-function(family,param){
          "bernoulli" = {     ## [01]
 
            theta = matrix(0,1,1)
-           theta[1] = 1/(1+exp(-param[1]))
+           theta[1] = 1/(1+exp(-alpha[1]))
 
          } ,
 
@@ -98,7 +89,7 @@ alpha2theta<-function(family,param){
          "beta" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -106,8 +97,8 @@ alpha2theta<-function(family,param){
          "betabinomial" = {     ## [N+, R+, R+]
 
            theta = matrix(0,1,2)
-           #theta[1] = round(param[1])
-           theta[1:2] = exp(param[1:2])
+           #theta[1] = round(alpha[1])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -115,7 +106,7 @@ alpha2theta<-function(family,param){
          "betageometric" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -123,7 +114,7 @@ alpha2theta<-function(family,param){
          "betanegativebinomial" = {     ## [N+, R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -131,7 +122,7 @@ alpha2theta<-function(family,param){
          "betaburr" = {     ## [R+, R+, R+, R+]
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -140,7 +131,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -149,7 +140,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -158,7 +149,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -167,7 +158,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -176,9 +167,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
-           theta[4] = exp(param[4])
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
+           theta[4] = exp(alpha[4])
 
          } ,
 
@@ -187,7 +178,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -195,9 +186,9 @@ alpha2theta<-function(family,param){
          "betalognormal" = {     ## [R+, R+, R, R+]
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
-           theta[4] = exp(param[4])
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
+           theta[4] = exp(alpha[4])
 
          } ,
 
@@ -206,7 +197,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -216,9 +207,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
-           theta[4] = exp(param[4])
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
+           theta[4] = exp(alpha[4])
 
          } ,
 
@@ -227,7 +218,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -236,7 +227,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -245,8 +236,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -254,7 +245,7 @@ alpha2theta<-function(family,param){
          "binomial" = {     ## [N+, 01]
 
            theta = matrix(0,1,1)
-           theta[1] = 1 / (1+exp(-param[1]))
+           theta[1] = 1 / (1+exp(-alpha[1]))
 
          } ,
 
@@ -262,8 +253,8 @@ alpha2theta<-function(family,param){
          "birnbaumsaunders" = {     ## [R+, R+, R]
 
            theta = matrix(0,1,3)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
 
          } ,
 
@@ -272,7 +263,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -281,16 +272,16 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
 
-         "burr2param" = {     ## [R+, R+]
+         "burr2alpha" = {     ## [R+, R+]
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -299,8 +290,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -309,7 +300,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -318,7 +309,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -327,7 +318,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -336,8 +327,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
 
          } ,
 
@@ -346,7 +337,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -356,7 +347,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -364,8 +355,8 @@ alpha2theta<-function(family,param){
          "diffzeta" = {     ## [R+, >1]
 
            theta = matrix(0,1,2)
-           theta[1] = exp(param[1])
-           theta[2] = 1+exp(-param[2])
+           theta[1] = exp(alpha[1])
+           theta[2] = 1+exp(-alpha[2])
 
          } ,
 
@@ -373,7 +364,7 @@ alpha2theta<-function(family,param){
          "discretegamma" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -381,8 +372,8 @@ alpha2theta<-function(family,param){
          "discretelaplace" = {     ## [R, 01]
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = 1/(1+exp(-param[2]))
+           theta[1] = alpha[1]
+           theta[2] = 1/(1+exp(-alpha[2]))
 
          } ,
 
@@ -390,8 +381,8 @@ alpha2theta<-function(family,param){
          "discretenormal" = {     ## [R, R+]
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -399,8 +390,8 @@ alpha2theta<-function(family,param){
          "discreteweibull" = {     ## [01, R+]
 
            theta = matrix(0,1,2)
-           theta[1] = 1/(1+exp(-param[1]))
-           theta[2] = exp(param[2])
+           theta[1] = 1/(1+exp(-alpha[1]))
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -408,9 +399,9 @@ alpha2theta<-function(family,param){
          "doubleweibull" = {     ## [R+, R, R+]
 
            theta = matrix(0,1,3)
-           theta[1] = exp(param[1])
-           theta[2] = param[2]
-           theta[3] = exp(param[3])
+           theta[1] = exp(alpha[1])
+           theta[2] = alpha[2]
+           theta[3] = exp(alpha[3])
 
          } ,
 
@@ -419,8 +410,8 @@ alpha2theta<-function(family,param){
 
            ## [R, R+]
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -429,7 +420,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -438,7 +429,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -447,8 +438,8 @@ alpha2theta<-function(family,param){
          "exponentialgeometric" = {     ## [R+, 01]
 
            theta = matrix(0,1,2)
-           theta[1] = exp(param[1])
-           theta[2] = 1/(1+exp(-param[2]))
+           theta[1] = exp(alpha[1])
+           theta[2] = 1/(1+exp(-alpha[2]))
 
          } ,
 
@@ -457,8 +448,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = exp(param[1])
-           theta[2] = 1/(1+exp(-param[2]))
+           theta[1] = exp(alpha[1])
+           theta[2] = 1/(1+exp(-alpha[2]))
 
          } ,
 
@@ -467,7 +458,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -476,8 +467,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -486,7 +477,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -495,7 +486,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -504,7 +495,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -513,7 +504,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -521,8 +512,8 @@ alpha2theta<-function(family,param){
          "fellerpareto" = {     ## [R(mini), R+, R+, R+, R+]
 
            theta = matrix(0,1,5)
-           theta[1] = param[1]
-           theta[2:5] = exp(param[2:5])
+           theta[1] = alpha[1]
+           theta[2:5] = exp(alpha[2:5])
 
          } ,
 
@@ -530,7 +521,7 @@ alpha2theta<-function(family,param){
          "fisk" = {     ## [R, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -539,8 +530,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -548,9 +539,9 @@ alpha2theta<-function(family,param){
          "frechet" = {     ## [R+, R, R+]
 
            theta = matrix(0,1,3)
-           theta[1] = exp(param[1])
-           theta[2] = param[2]
-           theta[3] = exp(param[3])
+           theta[1] = exp(alpha[1])
+           theta[2] = alpha[2]
+           theta[3] = exp(alpha[3])
 
          } ,
 
@@ -559,7 +550,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -567,7 +558,7 @@ alpha2theta<-function(family,param){
          "gammapoisson" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -575,8 +566,8 @@ alpha2theta<-function(family,param){
          "gaussian" = {     ## [R, R+]
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -584,9 +575,9 @@ alpha2theta<-function(family,param){
          "gev" = {     ## [R, R+, R]
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
 
          } ,
 
@@ -595,7 +586,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -604,9 +595,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = exp(param[1])
-           theta[2] = param[2]
-           theta[3] = exp(param[3])
+           theta[1] = exp(alpha[1])
+           theta[2] = alpha[2]
+           theta[3] = exp(alpha[3])
 
          } ,
 
@@ -615,9 +606,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = exp(param[1])
-           theta[2] = param[2]
-           theta[3] = exp(param[3])
+           theta[1] = exp(alpha[1])
+           theta[2] = alpha[2]
+           theta[3] = exp(alpha[3])
 
          } ,
 
@@ -626,9 +617,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
-           theta[4] = exp(param[4])
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
+           theta[4] = exp(alpha[4])
 
          } ,
 
@@ -636,7 +627,7 @@ alpha2theta<-function(family,param){
          "genpowerweibull" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -644,7 +635,7 @@ alpha2theta<-function(family,param){
          "geometric" = {     ## [01]
 
            theta = matrix(0,1,1)
-           theta[1] = 1/(1+exp(-param[1]))
+           theta[1] = 1/(1+exp(-alpha[1]))
 
          } ,
 
@@ -654,11 +645,11 @@ alpha2theta<-function(family,param){
          "generalizedhyperbolic" = {     ## [R, R+, R+, R, R]  [mu, delta, alpha, beta, lambda] (avec alpha^2 > beta^2)
 
            theta = matrix(0,1,5)
-           theta[1] = param[1]
-           theta[2] = max( c( 10e-12, exp(param[2]) ) )
-           theta[3] = max( c( 10e-12, exp(param[3]) ) )
-           theta[4] = theta[3] * ( exp(2*param[4])-1 ) / ( exp(2*param[4])+1 )
-           theta[5] = param[5]
+           theta[1] = alpha[1]
+           theta[2] = max( c( 10e-12, exp(alpha[2]) ) )
+           theta[3] = max( c( 10e-12, exp(alpha[3]) ) )
+           theta[4] = theta[3] * ( exp(2*alpha[4])-1 ) / ( exp(2*alpha[4])+1 )
+           theta[5] = alpha[5]
 
          } ,
 
@@ -666,10 +657,10 @@ alpha2theta<-function(family,param){
          "generalizedlambda" = {     ## [R, R+, R, R]
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
-           theta[4] = param[4]
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
+           theta[4] = alpha[4]
 
          } ,
 
@@ -678,8 +669,8 @@ alpha2theta<-function(family,param){
          "generalizedt" = {     ## [R, R+, R+, R+]
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2:4] = exp(param[2:4])
+           theta[1] = alpha[1]
+           theta[2:4] = exp(alpha[2:4])
 
          } ,
 
@@ -689,7 +680,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -698,9 +689,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
 
          } ,
 
@@ -709,8 +700,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -719,7 +710,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -728,7 +719,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -737,7 +728,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -746,7 +737,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -755,7 +746,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -763,7 +754,7 @@ alpha2theta<-function(family,param){
          "hjorth" = {     ## [R+, R+, R+]
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -771,9 +762,9 @@ alpha2theta<-function(family,param){
          "hblaplace" = {     ## [01, R, R+]
 
            theta = matrix(0,1,3)
-           theta[1] = 1/(1+exp(-param[1]))
-           theta[2] = param[2]
-           theta[3] = exp(param[3])
+           theta[1] = 1/(1+exp(-alpha[1]))
+           theta[2] = alpha[2]
+           theta[3] = exp(alpha[3])
 
          } ,
 
@@ -781,10 +772,10 @@ alpha2theta<-function(family,param){
          "hyperbolic" = {     ## [R, R+, R+, R]
 
              theta = matrix(0,1,4)
-             theta[1] = param[1]
-             theta[2] = exp(param[2])
-             theta[3] = exp(param[3])
-             theta[4] = theta[3] * ( exp(2*param[4])-1 ) / ( exp(2*param[4])+1 )
+             theta[1] = alpha[1]
+             theta[2] = exp(alpha[2])
+             theta[3] = exp(alpha[3])
+             theta[4] = theta[3] * ( exp(2*alpha[4])-1 ) / ( exp(2*alpha[4])+1 )
 
          } ,
 
@@ -792,8 +783,8 @@ alpha2theta<-function(family,param){
          "huber" = {     ## [R, R+]
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -801,7 +792,7 @@ alpha2theta<-function(family,param){
          "hzeta" = {     ## [R+]
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -810,7 +801,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -819,7 +810,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -828,7 +819,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -837,7 +828,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -846,7 +837,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -855,7 +846,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -864,7 +855,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -873,7 +864,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -882,7 +873,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -891,7 +882,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -900,7 +891,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -909,7 +900,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -918,7 +909,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -927,7 +918,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -936,9 +927,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3] = param[3]
-           theta[4] = exp(param[4])
+           theta[1:2] = exp(alpha[1:2])
+           theta[3] = alpha[3]
+           theta[4] = exp(alpha[4])
 
          } ,
 
@@ -947,7 +938,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -956,7 +947,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -964,8 +955,8 @@ alpha2theta<-function(family,param){
          "kumaraswamynormal" = {     ## [R, R+, R+, R+]
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2:4] = exp(param[2:4])
+           theta[1] = alpha[1]
+           theta[2:4] = exp(alpha[2:4])
 
          } ,
 
@@ -974,7 +965,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -984,8 +975,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -994,8 +985,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1004,7 +995,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1013,7 +1004,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -1022,7 +1013,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1031,8 +1022,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1042,8 +1033,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -1051,28 +1042,19 @@ alpha2theta<-function(family,param){
          "loggumbel" = {     ## [R, R+]
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
-
-         "loglaplace" = {     ## [R, R+, R+]
-
-
-           theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
-
-         } ,
 
 
          "loglog" = {     ## [R+, 01]
 
 
            theta = matrix(0,1,2)
-           theta[1] = exp(param[1])
-           theta[2] = 1+exp(-param[2])
+           theta[1] = exp(alpha[1])
+           theta[2] = 1+exp(-alpha[2])
 
          } ,
 
@@ -1081,7 +1063,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1090,8 +1072,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1100,9 +1082,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
 
          } ,
 
@@ -1111,8 +1093,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1121,7 +1103,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1130,7 +1112,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1138,7 +1120,7 @@ alpha2theta<-function(family,param){
          "logseries" = {     ## [01]
 
            theta = matrix(0,1,1)
-           theta[1] = 1/(1+exp(-param[1]))
+           theta[1] = 1/(1+exp(-alpha[1]))
 
          } ,
 
@@ -1147,7 +1129,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1156,7 +1138,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1165,7 +1147,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -1174,8 +1156,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -1184,7 +1166,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1193,7 +1175,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1202,7 +1184,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1211,7 +1193,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1220,7 +1202,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1228,7 +1210,7 @@ alpha2theta<-function(family,param){
          "negativebinomial" = {     ## [N+, 01]
 
            theta = matrix(0,1,1)
-           theta[1] = 1/(1+exp(-param[1]))
+           theta[1] = 1/(1+exp(-alpha[1]))
 
          } ,
 
@@ -1236,10 +1218,10 @@ alpha2theta<-function(family,param){
          "normalinversegaussian" = {     ## [R, R+, R+, R]
 
              theta = matrix(0,1,4)
-             theta[1] = param[1]
-             theta[2] = exp(param[2])
-             theta[3] = exp(param[3])
-             theta[4] = theta[3] * ( exp(2*param[4])-1 ) / ( exp(2*param[4])+1 )
+             theta[1] = alpha[1]
+             theta[2] = exp(alpha[2])
+             theta[3] = exp(alpha[3])
+             theta[4] = theta[3] * ( exp(2*alpha[4])-1 ) / ( exp(2*alpha[4])+1 )
 
          } ,
 
@@ -1248,8 +1230,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1:2] = exp(param[1:2])
-           theta[3:4] = param[3:4]
+           theta[1:2] = exp(alpha[1:2])
+           theta[3:4] = alpha[3:4]
 
          } ,
 
@@ -1258,7 +1240,7 @@ alpha2theta<-function(family,param){
          "paralogistic" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1267,7 +1249,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -1276,7 +1258,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1285,7 +1267,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1294,8 +1276,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -1304,8 +1286,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -1314,8 +1296,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2:4] = exp(param[2:4])
+           theta[1] = alpha[1]
+           theta[2:4] = exp(alpha[2:4])
 
          } ,
 
@@ -1324,7 +1306,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1332,8 +1314,8 @@ alpha2theta<-function(family,param){
          "pctalaplace" = {     ## [R+, R]
 
            theta = matrix(0,1,2)
-           theta[1] = exp(param[1])
-           theta[2] = param[2]
+           theta[1] = exp(alpha[1])
+           theta[2] = alpha[2]
 
          } ,
 
@@ -1341,7 +1323,7 @@ alpha2theta<-function(family,param){
          "poisson" = {     ## [R+]
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
          } ,
 
 
@@ -1349,7 +1331,7 @@ alpha2theta<-function(family,param){
          "power1" = {     ## [R+]
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
          } ,
 
 
@@ -1357,7 +1339,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -1366,7 +1348,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1375,8 +1357,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -1385,7 +1367,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,1)
-           theta[1] = exp(param[1])
+           theta[1] = exp(alpha[1])
 
          } ,
 
@@ -1394,9 +1376,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = exp(param[1])
-           theta[2] = param[2]
-           theta[3] = exp(param[3])
+           theta[1] = exp(alpha[1])
+           theta[2] = alpha[2]
+           theta[3] = exp(alpha[3])
 
          } ,
 
@@ -1406,7 +1388,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1415,7 +1397,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1424,7 +1406,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1434,8 +1416,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = 1/(1+exp(-param[1]))
-           theta[2] = exp(param[2])
+           theta[1] = 1/(1+exp(-alpha[1]))
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1444,8 +1426,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2:3] = exp(param[2:3])
+           theta[1] = alpha[1]
+           theta[2:3] = exp(alpha[2:3])
 
          } ,
 
@@ -1453,18 +1435,18 @@ alpha2theta<-function(family,param){
          "skewedt" = {     ## [R+, R+]
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
 
-         "skewedtfourparam" = {     ## [R, R+, R, R+(<25)]
+         "skewedtfouralpha" = {     ## [R, R+, R, R+(<25)]
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
-           theta[4] = 25/(1+exp(-param[4]))
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
+           theta[4] = 25/(1+exp(-alpha[4]))
 
          } ,
 
@@ -1472,9 +1454,9 @@ alpha2theta<-function(family,param){
          "skewednormal" = {     ## [R, R+, R, R]
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
 
          } ,
 
@@ -1482,10 +1464,10 @@ alpha2theta<-function(family,param){
          "skewedgeneralizedt" = {     ## [R, R+, -1+1, R+(>1), R+(>1)]
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = (exp(2*param[3])-1)/(exp(2*param[3])+1)
-           theta[4] = 1+exp(-param[4])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = (exp(2*alpha[3])-1)/(exp(2*alpha[3])+1)
+           theta[4] = 1+exp(-alpha[4])
 
          } ,
 
@@ -1493,10 +1475,10 @@ alpha2theta<-function(family,param){
          "skewedexponentialpower" = {     ## [R, R+, R, R+]
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = param[3]
-           theta[4] = max( c( 10e-12, exp(param[4]) ) )
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = alpha[3]
+           theta[4] = max( c( 10e-12, exp(alpha[4]) ) )
 
          } ,
 
@@ -1505,8 +1487,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1515,7 +1497,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1524,9 +1506,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3] = 25/(1+exp(-param[3]))
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3] = 25/(1+exp(-alpha[3]))
 
          } ,
 
@@ -1536,8 +1518,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1545,7 +1527,7 @@ alpha2theta<-function(family,param){
          "topple" = {     ## [01]
 
            theta = matrix(0,1,1)
-           theta[1] = 1/(1+exp(-param[1]))
+           theta[1] = 1/(1+exp(-alpha[1]))
 
          } ,
 
@@ -1553,7 +1535,7 @@ alpha2theta<-function(family,param){
          "transformedbeta" = {     ## [R+, R+, R+, R+]
 
            theta = matrix(0,1,4)
-           theta[1:4] = exp(param[1:4])
+           theta[1:4] = exp(alpha[1:4])
 
          } ,
 
@@ -1561,7 +1543,7 @@ alpha2theta<-function(family,param){
          "transformedgamma" = {     ## [R+, R+, R+]
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1571,9 +1553,9 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,4)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
-           theta[3:4] = param[3:4]
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
+           theta[3:4] = alpha[3:4]
 
          } ,
 
@@ -1582,7 +1564,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1591,8 +1573,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = 1/(1+exp(-param[1]))
-           theta[2] = exp(param[2])
+           theta[1] = 1/(1+exp(-alpha[1]))
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1601,8 +1583,8 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1] = param[1]
-           theta[2] = exp(param[2])
+           theta[1] = alpha[1]
+           theta[2] = exp(alpha[2])
 
          } ,
 
@@ -1611,7 +1593,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,2)
-           theta[1:2] = exp(param[1:2])
+           theta[1:2] = exp(alpha[1:2])
 
          } ,
 
@@ -1620,7 +1602,7 @@ alpha2theta<-function(family,param){
 
 
            theta = matrix(0,1,3)
-           theta[1:3] = exp(param[1:3])
+           theta[1:3] = exp(alpha[1:3])
 
          } ,
 
@@ -1628,7 +1610,7 @@ alpha2theta<-function(family,param){
          "yules" = {     ## [R+] >0.5
 
            theta = matrix(0,1,1)
-           theta[1] = 0.5+exp(-param[1])
+           theta[1] = 0.5+exp(-alpha[1])
 
          } ,
 

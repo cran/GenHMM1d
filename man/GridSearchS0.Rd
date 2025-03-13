@@ -4,7 +4,7 @@
 \alias{GridSearchS0}
 \title{Gridsearch}
 \usage{
-GridSearchS0(family, y, params, lbpdf = 0)
+GridSearchS0(family, y, params, size = 0, lbpdf = 0)
 }
 \arguments{
 \item{family}{distribution name; run the function distributions() for help}
@@ -13,6 +13,8 @@ GridSearchS0(family, y, params, lbpdf = 0)
 
 \item{params}{list of six vectors named (p1, p2, p3, p4, p5, p6). Each corresponding to a parameter of the distribution (additionnal parameters will be ignored).
 For example : params = list(p1=c(0.5, 5, 0.5), p2=c(1, 5, 1), p3=c(0.1, 0.9, 0.1), p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1)) where p1 is the grid of value for the first parameter.}
+
+\item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 
 \item{lbpdf}{minimal acceptable value of the density; (should be >= 0)}
 }
@@ -25,19 +27,11 @@ This function performs a gridsearch to find a good starting value for the EM alg
 \examples{
 family = "gaussian"
 
-Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
-sim = SimHMMGen(Q, "gaussian", theta, 500, graph=0)$SimData ;
+Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ;
+theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
+sim = SimHMMGen(theta, size=0, Q, ZI=0,"gaussian", 50)$SimData ;
 params = list(p1=c(-2, 2, 0.5), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1))
-accepted_params = GridSearchS0(family, sim, params, 0)
-
-family = "gaussian"
-
-Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
-sim = SimHMMGen(Q, "gaussian", theta, 500, graph=0)$SimData ;
-params = list(p1=c(-2, 2, 0.5), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1))
-accepted_params = GridSearchS0(family, sim, params, 0.1)
-
-
+accepted_params = GridSearchS0(family, sim, params)
 
 
 }

@@ -4,14 +4,14 @@
 \alias{QUANTILE}
 \title{Quantile function}
 \usage{
-QUANTILE(family, p, param, size = 0)
+QUANTILE(p, param, family, size = 0)
 }
 \arguments{
-\item{family}{distribution name; run the function distributions() for help}
-
 \item{p}{values at which the quantile needs to be computed; between 0 and 1; (e.g 0.01, 0.05)}
 
 \item{param}{parameters of the distribution; (1 x p)}
+
+\item{family}{distribution name; run the function distributions() for help}
 
 \item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 }
@@ -19,13 +19,13 @@ QUANTILE(family, p, param, size = 0)
 \item{q}{quantile/VAR}
 }
 \description{
-This function computes the quantile function of a univariate distribution
+This function computes the quantile function of a univariate distribution, excluding zero-inflated.
 }
 \examples{
 family = "gaussian"
 
-Q = 1 ; theta = matrix(c(-1.5, 1.7),1,2) ;
-quantile = QUANTILE(family, (0.01), theta)
+theta = matrix(c(-1.5, 1.7),1,2) ;
+quantile = QUANTILE(0.01, theta, family)
 print('Quantile : ')
 print(quantile)
 

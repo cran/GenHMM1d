@@ -4,7 +4,7 @@
 \alias{PDF}
 \title{Probability density function}
 \usage{
-PDF(family, y, param)
+PDF(family, y, param, size = 0)
 }
 \arguments{
 \item{family}{distribution name; run the function distributions() for help}
@@ -12,6 +12,8 @@ PDF(family, y, param)
 \item{y}{observations}
 
 \item{param}{parameters of the distribution; (1 x p)}
+
+\item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 }
 \value{
 \item{f}{pdf}

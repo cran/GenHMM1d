@@ -17,6 +17,5 @@ SimMarkovChain(Q, n, eta0)
 \item{x}{Generated Markov chain}
 }
 \description{
-This function generates a Markov chain X(1), ..., X(n) with transition matrix Q,
-starting from a state eta0 or the uniform distribution on {1,..., r}
+This function generates a Markov chain X(1), ..., X(n) with transition matrix Q, starting from a state eta0 or the uniform distribution on 1,..., r.
 }

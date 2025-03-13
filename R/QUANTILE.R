@@ -1,10 +1,10 @@
 #'@title Quantile function
 #'
-#'@description This function computes the quantile function of a univariate distribution
+#'@description This function computes the quantile function of a univariate distribution, excluding zero-inflated.
 #'
-#'@param family    distribution name; run the function distributions() for help
 #'@param p  values at which the quantile needs to be computed; between 0 and 1; (e.g 0.01, 0.05)
 #'@param param  parameters of the distribution; (1 x p)
+#'@param family    distribution name; run the function distributions() for help
 #'@param size additional parameter for some discrete distributions; run the command distributions() for help
 #'
 #'@return \item{q}{quantile/VAR}
@@ -13,15 +13,15 @@
 #'@examples
 #'family = "gaussian"
 #'
-#'Q = 1 ; theta = matrix(c(-1.5, 1.7),1,2) ;
-#'quantile = QUANTILE(family, (0.01), theta)
+#' theta = matrix(c(-1.5, 1.7),1,2) ;
+#'quantile = QUANTILE(0.01, theta, family)
 #'print('Quantile : ')
 #'print(quantile)
 #'
 #'@export
 
 
-QUANTILE<-function(family,p,param,size=0){
+QUANTILE<-function(p,param,family,size=0){
 
 
 
@@ -34,13 +34,6 @@ QUANTILE<-function(family,p,param,size=0){
 
          } ,
 
-
-         "asymlaplace" = {    ## [R, R+, R+]
-
-
-           q = VGAM::qalap(p, location = param[1], scale = param[2], kappa = param[3])
-
-         } ,
 
 
          "asympower" = {    ## [01, R+, R+]
@@ -909,13 +902,6 @@ QUANTILE<-function(family,p,param,size=0){
          } ,
 
 
-         "loglaplace" = {     ## [R, R+, R+]
-
-
-           q = VGAM::qloglap(p, location.ald = param[1], scale.ald = param[2], kappa = param[3])
-
-         } ,
-
 
          "loglog" = {     ## [R+, >1]
 
@@ -1403,7 +1389,7 @@ QUANTILE<-function(family,p,param,size=0){
 
            q = VGAM::qyules(p, shape = param[1])
 
-         } ,
+         }
 
 
   )

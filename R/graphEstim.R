@@ -3,6 +3,7 @@
 #'@description This function shows the graphs resulting from the estimation of a HMM model
 #'
 #'@param y   observations
+#'@param ZI  1 if zero-inflated, 0 otherwise (default)
 #'@param reg    number of regimes
 #'@param theta estimated parameters; (r x p)
 #'@param family  distribution name; run the function distributions() for help
@@ -14,15 +15,16 @@
 #'
 #'@export
 #'
-graphEstim<-function(y, reg, theta, family, pred_l, pred_e){
+graphEstim<-function(y, ZI=0, reg, theta, family, pred_l, pred_e){
   ninit=100   #minimum number of iterations
   n = length(y)
 
+  un = 1+ZI;
     dd1 = data.frame("observations" = y)
     dd1$pred_l = as.factor(pred_l)
     dd1$pred_e = as.factor(pred_e)
     f = matrix(0, nrow = length(y), ncol = reg)
-    for (j in 1:reg){
+    for (j in un:reg){
       f[,j] = PDF(family, y, theta[j,])
     }
 

@@ -9,7 +9,7 @@ CDF(family, y, param, size = 0)
 \arguments{
 \item{family}{distribution name; run the function distributions() for help}
 
-\item{y}{observations}
+\item{y}{values at which the cdf is evaluated}
 
 \item{param}{parameters of the distribution; (1 x p)}
 

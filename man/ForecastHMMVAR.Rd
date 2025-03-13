@@ -4,16 +4,18 @@
 \alias{ForecastHMMVAR}
 \title{Value at risk (VAR) of a univariate HMM at time n+k1, n+k2, ...}
 \usage{
-ForecastHMMVAR(U, family, theta, Q, eta, k = 1)
+ForecastHMMVAR(U, ZI = 0, family, theta, Q, eta, k = 1)
 }
 \arguments{
-\item{U}{value (1  x 1) between 0 and 1}
+\item{U}{values (n  x 1) between 0 and 1}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{family}{distribution name; run the function distributions() for help}
 
 \item{theta}{parameters; (r  x p)}
 
-\item{Q}{probability transition  matrix; (r  x r)}
+\item{Q}{probability transition  matrix for the regimes; (r  x r)}
 
 \item{eta}{vector of the estimated probability of each regime at time n; (1  x r)}
 
@@ -28,15 +30,12 @@ This function computes the VAR of a univariate HMM for multiple horizons, given 
 \examples{
 \donttest{
 family = "gaussian"
-
 theta = matrix(c(-1.5, 1.7, 1, 1),2,2)
 Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2)
-eta = c(0.96091218, 0.03908782)
-
-
-forecastedVAR = ForecastHMMVAR(U=c(0.01), family, theta=theta, Q=Q, eta=eta, k=c(1,2,3,4,5))
-print('Forecasted VAR : ')
-print(forecastedVAR)
+eta = c(0.96, 0.04)
+U=c(0.01,0.05)
+k=c(1,2,3,4,5)
+ForecastHMMVAR(U, 0, family, theta, Q, eta=eta,k)
 }
 
 

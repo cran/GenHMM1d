@@ -4,42 +4,51 @@
 \alias{ForecastHMMPdf}
 \title{Forecasted density function of a univariate HMM at time n+k1, n+k2, ...}
 \usage{
-ForecastHMMPdf(y, family, theta, Q, eta, k = 1, graph = 0)
+ForecastHMMPdf(
+  y,
+  ZI = 0,
+  family,
+  theta,
+  Q,
+  eta,
+  size = 0,
+  k = 1,
+  graph = FALSE
+)
 }
 \arguments{
 \item{y}{points at which the pdf function is computed}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{family}{distribution name; run the function distributions() for help}
 
 \item{theta}{parameters; (r  x p)}
 
-\item{Q}{probability transition  matrix; (r  x r)}
+\item{Q}{probability transition  matrix for the regimes; (r  x r)}
 
 \item{eta}{vector of the estimated probability of each regime at time n; (1  x r)}
 
-\item{k}{prediction times (may be a vector of integers).}
+\item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 
-\item{graph}{(0 or else) produce plots}
+\item{k}{prediction times (may be a vector of integers)}
+
+\item{graph}{TRUE to produce plots (FALSE is default)}
 }
 \value{
 \item{pdf}{values of the pdf function}
 }
 \description{
-This function computes the probability forecasted density function of a univariate HMM for multiple horizons, given observations up to time n
+This function computes the probability forecasted density function (with respect to Dirac(0)+Lesbesgue) of a univariate HMM for multiple horizons, given observations up to time n
 }
 \examples{
 family = "gaussian"
-
-lb = -6
-ub = 6
-
 theta = matrix(c(-1.5, 1.7, 1, 1),2,2)
 Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2)
-eta = c(0.96091218, 0.03908782)
-
-
-forecastedhmmpdf = ForecastHMMPdf(y=seq(from=lb, to=ub, by=0.1), family=family,
-theta=theta, Q=Q, eta=eta, k=c(1,5,10,20), graph=1)
+eta = c(0.06, 0.94)
+x=seq(from=-6, to=6, by=0.1)
+k=c(1,5,10,20)
+pdf = ForecastHMMPdf(x, 1, family, theta, Q, eta, k=k, graph=TRUE)
 
 
 }

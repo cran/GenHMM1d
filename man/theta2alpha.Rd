@@ -2,19 +2,19 @@
 % Please edit documentation in R/theta2alpha.R
 \name{theta2alpha}
 \alias{theta2alpha}
-\title{Transform constrained parameters  to unconstrained parameters}
+\title{Transform constrained parameters to unconstrained parameters}
 \usage{
-theta2alpha(family, param)
+theta2alpha(family, theta)
 }
 \arguments{
 \item{family}{distribution name; run the command distributions() for help}
 
-\item{param}{constrained parameters of the univariate distribution}
+\item{theta}{constrained parameters of the univariate distribution}
 }
 \value{
-\item{alpha}{constrained parameters}
+\item{alpha}{unconstrained parameters}
 }
 \description{
-This function computes the unconstrained parameters alpha of a univariate distribution corresponding to constrainted parameters theta.
+This function computes the unconstrained parameters alpha of a univariate distribution corresponding to constrained parameters theta.
 }
 \keyword{internal}

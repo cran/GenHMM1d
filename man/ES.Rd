@@ -4,14 +4,14 @@
 \alias{ES}
 \title{Expected shortfall function}
 \usage{
-ES(family, p, param, size = 0, Nsim = 25000)
+ES(p, param, family, size = 0, Nsim = 25000)
 }
 \arguments{
-\item{family}{distribution name; run the function distributions() for help}
-
 \item{p}{value (1  x 1) at which the expected shortfall needs to be computed; between 0 and 1; (e.g 0.01, 0.05)}
 
 \item{param}{parameters of the distribution; (1 x p)}
+
+\item{family}{distribution name; run the function distributions() for help}
 
 \item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
 
@@ -21,13 +21,13 @@ ES(family, p, param, size = 0, Nsim = 25000)
 \item{es}{expected shortfall}
 }
 \description{
-This function compute the expected shortfall of an univariate distribution
+This function computes the expected shortfall of an univariate distribution, excluding zero-inflated.
 }
 \examples{
 family = "gaussian"
 
-theta = matrix(c(-1.5, 1.7),1,2) ;
-es = ES(family, (0.01), theta)
+theta = c(-1.5, 1.7) ;
+es = ES( 0.01, theta, family)
 print('Expected shortfall : ')
 print(es$es)
 

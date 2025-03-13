@@ -4,43 +4,34 @@
 \alias{SimHMMGen}
 \title{Simulation of univariate hidden Markov model}
 \usage{
-SimHMMGen(Q, family, theta, n, graph = 0)
+SimHMMGen(theta, size = 0, Q, ZI = 0, family, n)
 }
 \arguments{
-\item{Q}{transition probability matrix; (r x r)}
+\item{theta}{parameters; (r x p)}
+
+\item{size}{additional parameter for some discrete distributions; run the command distributions() for help}
+
+\item{Q}{transition probability matrix for regimes; (r x r)}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{family}{distribution name; run the function distributions() for help}
 
-\item{theta}{parameters; (r x p)}
-
 \item{n}{number of simulated observations}
-
-\item{graph}{1 for a graph, 0 otherwise (default); only for continuous distributions}
 }
 \value{
 \item{SimData}{Simulated data}
 
 \item{MC}{Simulated Markov chain}
-
-\item{Sim}{Simulated Data for each regime}
 }
 \description{
 This function simulates observation from a univariate hidden Markov model
 }
-\details{
-HMM observations simulation
-}
 \examples{
+\donttest{
 family = "gaussian"
-Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
-sim = SimHMMGen(Q, family, theta, 500, 0)
-
-
-
-family = "binomial"
-size = 5
-Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ; thetaB = matrix(c(size, size, 0.2, 0.7),2,2) ;
-simB = SimHMMGen(Q, family, thetaB, 500, graph=0)$SimData
-
-
+Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ;
+theta = matrix(c(0, 1.7, 0, 10),2,2) ;
+y = SimHMMGen(theta, Q=Q, ZI=1,family=family, n=50)$SimData
+}
 }

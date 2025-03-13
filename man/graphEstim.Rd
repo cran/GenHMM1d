@@ -4,10 +4,12 @@
 \alias{graphEstim}
 \title{Graphs}
 \usage{
-graphEstim(y, reg, theta, family, pred_l, pred_e)
+graphEstim(y, ZI = 0, reg, theta, family, pred_l, pred_e)
 }
 \arguments{
 \item{y}{observations}
+
+\item{ZI}{1 if zero-inflated, 0 otherwise (default)}
 
 \item{reg}{number of regimes}
 

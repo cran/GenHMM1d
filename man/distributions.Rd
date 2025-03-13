@@ -7,7 +7,7 @@
 distributions()
 }
 \value{
-No returned value, allows the users to know the differents distributions and parameters
+No returned value, allows the users to know the different distributions and parameters
 }
 \description{
 This function allows the users to find the details on the available distributions.
