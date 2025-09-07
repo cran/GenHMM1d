@@ -8,7 +8,6 @@
 #'@param size      additional parameter for some discrete distributions; run the command distributions() for help
 #'@param max_iter  maximum number of iterations of the EM algorithm; suggestion 10000
 #'@param eps       precision (stopping criteria); suggestion 0.0001
-#'@param useFest   TRUE (default) to use the first estimated parameters as starting value for the bootstrap, FALSE otherwise
 #'
 #'
 #'@return Internal function used for the parametric bootstrap
@@ -16,7 +15,7 @@
 #'@export
 #'@keywords internal
 
-bfun <- function(theta,Q, ZI, family, n, size=0, max_iter=10000, eps=1e-4, useFest=TRUE){
+bfun <- function(theta,Q, ZI, family, start, n, size, max_iter, eps){
   if(is.null(dim(Q))){
     QQ0 = matrix(Q)
     reg = dim(QQ0)[1]
@@ -25,14 +24,12 @@ bfun <- function(theta,Q, ZI, family, n, size=0, max_iter=10000, eps=1e-4, useFe
   }
 
 
-   y = SimHMMGen(theta, size, Q, ZI, family, n)$SimData
+   ysim = SimHMMGen(theta, size, Q, ZI, family, n)$SimData
 
-  if (useFest){
-      esthmmg = EstHMMGen(y, ZI, reg, family, start=0, max_iter=max_iter, eps=eps, size=size, theta0=theta)
-  } else {
-      esthmmg = EstHMMGen(y, ZI, reg, family, max_iter=max_iter, eps=eps, size=size)
 
-  }
+      esthmmg = EstHMMGen(ysim, ZI, reg, family, start, max_iter, eps, size)
+
+
 
   out = list(theta1=esthmmg$theta, Q1=esthmmg$Q, eta1=esthmmg$eta, nu1=esthmmg$nu, U1=esthmmg$U,
              cvm_sim=esthmmg$cvm, W1=esthmmg$W,lambda1=esthmmg$lambda, LL1=esthmmg$LL, AIC1=esthmmg$AIC,

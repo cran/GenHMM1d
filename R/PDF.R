@@ -1405,8 +1405,9 @@ PDF<-function(family,y,param,size=0){
 
 
   )
-
-  f[is.nan(f)] <- 0
+  ind=(f==0)
+  f[ind]=1e-10
+  f[is.nan(f)] <- 1e-10
   return(f)
 
 

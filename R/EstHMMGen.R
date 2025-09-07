@@ -18,9 +18,9 @@
 #'@return \item{Q}{estimated transition matrix for the regimes; (r x r)}
 #'@return \item{eta}{conditional probabilities of being in regime k at time t given observations up to time t; (n x r) }
 #'@return \item{lambda}{conditional probabilities of being in regime k at time t given all observations; (n x r)}
-#'@return \item{U}{matrix of Rosenblatt transforms; (n x r)}
+#'@return \item{U}{pseudo-observations that should be uniformly distributed under the null hypothesis}
 #'@return \item{cvm}{cramer-von-Mises statistic for goodness-of-fit}
-#'@return \item{W}{pseudo-observations that should be uniformly distributed under the null hypothesis}
+#'@return \item{W}{matrix of Rosenblatt transforms; (n x r)}
 #'@return \item{LL}{log-likelihood}
 #'@return \item{nu}{stationary distribution}
 #'@return \item{AIC}{Akaike information criterion}
@@ -41,7 +41,7 @@
 #'Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ;
 #'theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
 #'y = SimHMMGen(theta, Q=Q, family=family,  n=100)$SimData
-#'est = EstHMMGen(y, reg=2, family=family)
+#'est = EstHMMGen(y, ZI=0,reg=2, family=family)
 #'
 #'
 #'
@@ -55,7 +55,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
   un = 1+ZI;
 
   reg1 = reg-ZI;
-  n0 = floor((n/reg1))
+  if(ZI==1)
+  {
+    y0=y[y!=0]
+    n00 = length(y0)
+  } else {
+    n00=n
+     y0=y}
+  n0 = floor((n00/reg1))
   ind0   = 1:n0
   if(is.null(theta0)){
     p=0
@@ -71,24 +78,24 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
            "asymexppower" = {    ## [R+, R+, 01]
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(1, 5, 1), p3=c(0.1, 0.9, 0.1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)
+               theta00 = GridSearchS0(family, y0, params)
              } else {
-               theta0 = start
+               theta00 = start
              }
 
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -96,23 +103,23 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
            "asymlaplace" = {    ## [R, R+, R+]
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.25), p2=c(1, 10, 1), p3=c(1, 1, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)
+               theta00 = GridSearchS0(family, y0, params)
              } else {
-               theta0=start
+               theta00=start
              }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -120,21 +127,21 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
            "asympower" = {    ## [01, R+, R+]
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.1, 0.9, 0.1), p2=c(1, 5, 1), p3=c(0.5, 5, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)
+               theta00 = GridSearchS0(family, y0, params)
              }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -143,22 +150,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
            "asymt" = {    ## [R+, R+, 01, R]
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(3, 5, 1), p3=c(0.1, 0.9, 0.1), p4=c(-2,2,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -167,22 +174,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "beard" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -190,8 +197,8 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
            "benini" = {     ## [R, R+]
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (mean(y)>0){
                p1=c(min(y)-0.05, min(y)+0.05, 0.05)
              } else{
@@ -200,17 +207,17 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
              if (start == 0){
                params = list(p1=p1, p2=c(0.25, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -220,11 +227,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "bernoulli" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -238,22 +245,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "beta" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 3, 1), p2=c(1, 3, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -262,22 +269,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betabinomial" = {     ## [N+, R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start==0){
                params = list(p1=c(size, size, 1), p2=c(1, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
                theta0 = GridSearchS0(family, y, params,size)} else{
-                 theta0 = start
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa, size)  ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -286,22 +293,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betageometric" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(1, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa)  ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -311,22 +318,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betanegativebinomial" = {     ## [N+, R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(size, size, 1), p2=c(1, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
                theta0 = GridSearchS0(family, y, params,size)} else{
-                 theta0 = start
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa, size)  ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -336,22 +343,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betaburr" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -361,22 +368,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betaburr7" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -385,22 +392,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betaexponential" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -409,22 +416,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betafrechet" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -433,22 +440,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betagompertz" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 4, 0.5), p2=c(1, 4, 1), p3=c(1,4,1), p4=c(1,4,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -458,22 +465,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betagumbel" = {     ## [R+, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(-2,2,1), p4=c(0.5,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -482,22 +489,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betagumbel2" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 0.5, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -507,22 +514,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betalognormal" = {     ## [R+, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(-1,1,1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -532,22 +539,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betalomax" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -558,22 +565,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betanormal" = {     ## [R+, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0,0,1), p4=c(1,3,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -582,22 +589,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betaprime" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,3,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -606,22 +613,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "betaweibull" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 0.5), p2=c(1, 5, 1), p3=c(1,5,1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -631,22 +638,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "bhattacharjee" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 1), p2=c(0.5,10, 1), p3=c(0.5, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -656,22 +663,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "birnbaumsaunders" = {     ## [R+, R+, R]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 10, 1), p2=c(0.5,5, 1), p3=c(0, 0, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -680,11 +687,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "binomial" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa, size) ) ) )
                  return(log_likelihood)
@@ -697,22 +704,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "boxcox" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5,5, 1), p3=c(0.5, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -721,22 +728,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "burr" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
-               params = list(p1=c(0.5, 10, 1), p2=c(0.5,5, 1), p3=c(1, 3, 1), p4=c(1,1,1),
-                             p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               params = list(p1=c(0.5, 10, 2), p2=c(0.5,5, 2), p3=c(1, 3, 2), p4=c(1,1,2),
+                             p5=c(1,1,2), p6=c(1,1,2))
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -745,22 +752,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "burr2param" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5,5, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -769,22 +776,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "cauchy" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 5, 1), p2=c(0.5, 10, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -793,22 +800,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "chen" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -817,14 +824,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "chi" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(1, 5, 1), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                            p5=c(1,1,1), p6=c(1,1,1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -837,14 +844,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "chisquared" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(1, 5, 1), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                            p5=c(1,1,1), p6=c(1,1,1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -857,22 +864,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "clg" = {     ## [R+, R+, R]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5,5, 1), p3=c(-1, 1, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -882,22 +889,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "complementarybeta" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5,5, 1), p3=c(0, 0, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -907,22 +914,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "dagum" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 1, 1), p2=c(0.5,5, 1), p3=c(0.5, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -931,22 +938,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "diffzeta" = {     ## [R+, >1]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(1.1,5, 1), p3=c(0.5, 0.5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -955,22 +962,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "discretegamma" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(1,5, 1), p3=c(0.5, 0.5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -979,22 +986,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "discretelaplace" = {     ## [R, 01]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1,1, 1), p2=c(0.1,0.9,0.1), p3=c(0.5, 0.5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1003,22 +1010,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "discretenormal" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1,1, 1), p2=c(1,5,1), p3=c(0.5, 0.5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1027,22 +1034,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "discreteweibull" = {     ## [01, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.1,0.9, 1), p2=c(1,5,1), p3=c(0.5, 0.5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1051,22 +1058,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "doubleweibull" = {     ## [R+, R, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(-1,1, 1), p3=c(0.5, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1075,14 +1082,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "exponential" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(1, 10, 1), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                            p5=c(1,1,1), p6=c(1,1,1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -1095,22 +1102,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "exponentialextension" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1120,22 +1127,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "exponentialgeometric" = {     ## [R+, 01]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.1, 0.9, 0.2), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1144,22 +1151,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "exponentiallogarithmic" = {     ## [R+, 01]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(0.1, 0.9, 0.2), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1168,22 +1175,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "exponentialpoisson" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1192,22 +1199,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "exponentialpower" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 1), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1217,22 +1224,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "ev" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 1), p2=c(0.5, 10, 0.5), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1241,22 +1248,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "F" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1265,21 +1272,21 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "fellerpareto" = {     ## [R(mini), R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(min(y)-0.5, min(y)-0.5, 0.5),
                            p2=c(0.5, 5, 1), p3=c(0.5, 5, 1), p4=c(0.5, 5, 1), p5=c(0.5, 5, 1),
                            p6=c(1, 1, 1))
-             theta000 = GridSearchS0(family, y, params)
-             theta0[1,1:4] = theta000[2:5]
+             theta000 = GridSearchS0(family, y0, params)
+             theta00[1,1:4] = theta000[2:5]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0[1,]), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1288,22 +1295,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "fisk" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 0.5), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1312,22 +1319,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "foldednormal" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(0.5, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1336,20 +1343,20 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "frechet" = {     ## [R+, R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 5, 1), p2=c(min(y)-0.5, min(y)-0.5, 5), p3=c(0.5, 5, 2),
                            p4=c(1, 1, 1), p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta000 = GridSearchS0(family, y, params)
-             theta0[1,] = c(theta000[1], theta000[3])
+             theta000 = GridSearchS0(family, y0, params)
+             theta00[1,] = c(theta000[1], theta000[3])
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0[1,]), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00[1,]), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1358,11 +1365,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "hzeta" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -1375,22 +1382,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "gamma" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1400,22 +1407,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "gammapoisson" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(1,5, 1), p3=c(0.5, 0.5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1424,37 +1431,37 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
            "gaussian" = {     ## [R, R+]
              p = 2 ;
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for (j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
-               theta0[j,] = c(mean(x), stats::sd(x))
+               x=y0[ind]
+               theta00[j,] = c(mean(x), stats::sd(x))
              }
-             alpha0[,1]= theta0[,1]
-             alpha0[,2]= log(theta0[,2])
+             alpha0[,1]= theta00[,1]
+             alpha0[,2]= log(theta00[,2])
            } ,
 
 
            "gev" = {     ## [R, R+, R]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
-               theta0[j,] = EnvStats::egevd(as.numeric(y))$parameters} else{
-                 theta0 = start
+               theta00[j,] = EnvStats::egevd(as.numeric(y))$parameters} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
-               alpha0[j,] = theta2alpha(family, theta0[j,])
+               alpha0[j,] = theta2alpha(family, theta00[j,])
              }
            } ,
 
@@ -1462,22 +1469,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "geninvbeta" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(0.5, 5, 0.5), p3=c(1, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1486,22 +1493,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "genlogis" = {     ## [R+, R, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(-1, 1, 1), p3=c(1, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1510,22 +1517,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "genlogis3" = {     ## [R+, R, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(-1, 1, 1), p3=c(1, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1534,22 +1541,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "genlogis4" = {     ## [R+, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(1, 5, 1), p3=c(-1, 1, 1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1558,22 +1565,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "genpowerweibull" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(1, 5, 1), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1582,11 +1589,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "geometric" = {     ## [01]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -1600,22 +1607,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "generalizedhyperbolic" = {     ## [R, R+, R+, R, R]   [mu, delta, alpha, beta, lambda] (avec alpha^2 > beta^2)
 
              p = 5
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-2, 2, 1), p2=c(0.5, 5, 0.5), p3=c(1, 5, 1), p4=c(0.1, 0.9, 0.1),
                              p5=c(1, 5, 1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1625,22 +1632,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "generalizedlambda" = {     ## [R, R+, R, R]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-2, 2, 1), p2=c(0.5, 5, 0.5), p3=c(0, 3, 1), p4=c(0, 3, 1),
                              p5=c(1, 1, 1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1649,22 +1656,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "generalizedt" = {     ## [R, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-2, 2, 1), p2=c(0.5, 5, 0.5), p3=c(1, 5, 1), p4=c(1, 5, 1),
                              p5=c(1, 1, 1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1674,22 +1681,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "gompertz" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1698,22 +1705,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "gpd" = {     ## [R+(min(y)), R+, R]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(min(y), min(y), 1), p2=c(0.5, 5, 0.5), p3=c(0, 0, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1722,22 +1729,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "gumbel" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(0.5, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1746,22 +1753,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "gumbel2" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1770,14 +1777,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "halfcauchy" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -1790,14 +1797,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "halflogistic" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -1811,14 +1818,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "halfnormal" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -1831,22 +1838,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "halft" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1855,22 +1862,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "hjorth" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1879,22 +1886,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "hblaplace" = {     ## [01, R, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.1, 0.9, 0.1), p2=c(-2, 2, 1), p3=c(0.5,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1903,22 +1910,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "huber" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 1), p2=c(0.5, 10, 0.5), p3=c(1.345, 1.345, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1927,22 +1934,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "hyperbolic" = {     ## [R, R+, R+, R]   [mu, delta, alpha, beta] (avec alpha^2 > beta^2)
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 1), p2=c(0.5, 5, 0.5), p3=c(1, 2, 1), p4=c(0.1, 0.9, 0.1),
                              p5=c(1, 1, 1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1951,22 +1958,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inversebeta" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 0.5), p3=c(1, 1, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1975,22 +1982,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inverseburr" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 0.5), p3=c(1, 1, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -1999,14 +2006,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inversechisquared" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -2019,14 +2026,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inverseexponential" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -2039,22 +2046,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inverseexpexponential" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2063,22 +2070,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inversegamma" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2087,22 +2094,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inverselomax" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2111,22 +2118,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inverseparalogistic" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2135,22 +2142,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inversepareto" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2159,22 +2166,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inversetransformedgamma" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 10, 0.5), p3=c(1, 1, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2183,22 +2190,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "inverseweibull" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2207,22 +2214,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamy" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2231,22 +2238,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamyexponential" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2255,22 +2262,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamygamma" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2279,22 +2286,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamygumbel" = {     ## [R+, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(-1,1,1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2303,22 +2310,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamyhalfnormal" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2327,22 +2334,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamyloglogistic" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2351,22 +2358,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamynormal" = {     ## [R, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2375,22 +2382,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "kumaraswamyweibull" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,5,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2399,22 +2406,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "laplace" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2423,22 +2430,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "levy" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2447,22 +2454,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "linearfailurerate" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2471,14 +2478,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "lindley" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(1, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -2491,22 +2498,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "libbynovickbeta" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1, 5, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2515,22 +2522,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "logcauchy" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 1), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2539,22 +2546,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "loggamma" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 1), p2=c(0.5, 10, 0.5), p3=c(1, 1, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2564,22 +2571,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "loggumbel" = {     ## [R, R+,]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(1, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2588,22 +2595,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "loglaplace" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 1), p2=c(0.5, 10, 0.5), p3=c(1, 5, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2612,22 +2619,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "loglog" = {     ## [R+, >1]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(1.5, 10, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2637,22 +2644,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "loglogistic" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2661,22 +2668,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "lognormal" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(1, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2685,22 +2692,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "lognormal3" = {     ## [R, R+, R]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-2, 2, 0.5), p2=c(1, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2709,22 +2716,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "logistic" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(1, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2733,22 +2740,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "logisticexponential" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2758,22 +2765,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "logisticrayleigh" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2782,11 +2789,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "logseries" = {     ## [01]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -2799,22 +2806,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "lomax" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2823,22 +2830,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "makeham" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 10, 0.5), p3=c(0.5, 5, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2847,14 +2854,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "maxwell" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(1, 10, 0.5), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -2867,22 +2874,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "mcgilllaplace" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2891,22 +2898,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "moexponential" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2915,22 +2922,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "moweibull" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2940,22 +2947,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "nakagami" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2964,22 +2971,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "ncchisquared" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -2988,22 +2995,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "ncF" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 10, 0.5), p3=c(0.5, 5, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3012,11 +3019,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "negativebinomial" = {     ## [01]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa, size) ) ) )
                  return(log_likelihood)
@@ -3029,22 +3036,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "normalinversegaussian" = {     ## [R, R+, R+, R]   [mu, delta, alpha, beta] (avec alpha^2 > beta^2)
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 1), p2=c(1, 5, 0.5), p3=c(1, 5, 1), p4=c(0.1, 0.9, 0.1),
                              p5=c(1, 1, 1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3053,20 +3060,20 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "nsbeta" = {     ## [R+, R+, R(min), R(maxi)]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 5, 1), p2=c(0.5, 10, 0.5), p3=c(1,1,1),
                            p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1))
-             theta000 = GridSearchS0(family, y, params)
+             theta000 = GridSearchS0(family, y0, params)
              theta0 = theta000[1:2]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3076,22 +3083,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "paralogistic" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3100,11 +3107,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "pareto" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3117,11 +3124,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "pareto1" = {     ## [R+, R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3134,20 +3141,20 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "pareto2" = {     ## [R, R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(min(y)-0.5, min(y)-0.5, 1), p2=c(0.5, 10, 0.5),
                            p3=c(0.5, 5, 0.5), p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1))
-             thetaaa0 = GridSearchS0(family, y, params)
-             theta0[1,] = thetaaa0[2:3]
+             thetaaa0 = GridSearchS0(family, y0, params)
+             theta00[1,] = thetaaa0[2:3]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0[1,]), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00[1,]), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3156,20 +3163,20 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "pareto3" = {     ## [R, R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(min(y)-0.5, min(y)-0.5, 1), p2=c(0.5, 10, 0.5),
                            p3=c(0.5, 5, 0.5), p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1))
-             thetaaa0 = GridSearchS0(family, y, params)
-             theta0[1,] = thetaaa0[2:3]
+             thetaaa0 = GridSearchS0(family, y0, params)
+             theta00[1,] = thetaaa0[2:3]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0[1,]), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00[1,]), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3178,20 +3185,20 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "pareto4" = {     ## [R, R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(min(y)-0.5, min(y)-0.5, 1), p2=c(0.5, 10, 0.5),
                            p3=c(0.5, 5, 0.5), p4=c(0.5,5,1), p5=c(1,1,1), p6=c(1,1,1))
-             thetaaa0 = GridSearchS0(family, y, params)
-             theta0[1,] = thetaaa0[2:4]
+             thetaaa0 = GridSearchS0(family, y0, params)
+             theta00[1,] = thetaaa0[2:4]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0[1,]), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00[1,]), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3200,19 +3207,19 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "paretopositivestable" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 0.5), p3=c(0.5, 5, 0.5),
                            p4=c(1,1,1), p5=c(1,1,1), p6=c(1,1,1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3221,22 +3228,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "pctalaplace" = {     ## [R+, R]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(-1, 1, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3246,22 +3253,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "perks" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3270,11 +3277,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "poisson" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3287,11 +3294,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "power1" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3304,11 +3311,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "power2" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3321,22 +3328,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "powerdistribution" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 10, 0.5), p2=c(0.5, 10, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3345,22 +3352,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "powerexponential" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 2, 0.5), p2=c(0.5, 2, 0.5), p3=c(0.5,1,0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3369,14 +3376,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "rayleigh" = {     ## [R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(1, 10, 1), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3389,22 +3396,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "reflectedgamma" = {     ## [R+, R, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(-1, 1, 1), p3=c(1,5,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3413,22 +3420,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "rice" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3437,22 +3444,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "scaledchisquared" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3461,22 +3468,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "schabe" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3485,22 +3492,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "simplex" = {     ## [01, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.1, 0.9, 0.2), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3509,22 +3516,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "skewedlaplace" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(0.5, 5, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3533,22 +3540,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "skewedt" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(0.5, 0.5, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3557,22 +3564,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "skewedtfourparam" = {     ## [R, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(-1, 1, 1), p4=c(1, 3, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3581,22 +3588,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "skewednormal" = {     ## [R, R+, R, R]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(-1, 1, 1), p4=c(-2, 5, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3606,22 +3613,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "skewedgeneralizedt" = {     ## [R, R+, -1+1, R+(>1), R+(>1)]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(2, 5, 1), p3=c(-0.9, 0.9, 0.1), p4=c(1, 10, 1),
                              p5=c(100, 100, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3631,22 +3638,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "skewedexponentialpower" = {     ## [R, R+, R, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(-1, 1, 0.5), p2=c(0.5, 5, 1), p3=c(-1, 1, 1), p4=c(1, 5, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3657,22 +3664,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "slash" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(1, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3681,19 +3688,19 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            # "stable" = {     ## [02, -1+1, R+, R]
            #
            #   p = 4
-           #   theta0 = matrix(0,reg,p)
-           #   alpha0 = theta0
+           #   theta00 = matrix(0,reg,p)
+           #   alpha0 = theta00
            #   params = list(p1=c(0.5, 2, 0.5), p2=c(0, 0, 1), p3=c(1, 5, 1), p4=c(0, 0, 1),
            #                 p5=c(1, 1, 1), p6=c(1, 1, 1))
-           #   theta0 = GridSearchS0(family, y, params)
+           #   theta00 = GridSearchS0(family, y0, params)
            #   for( j in un:reg){
            #     ind = (j-un)*n0+ind0
-           #     x = y[ind]
+           #     x=y0[ind]
            #     funParam0 <- function(thetaa){
            #       log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
            #       return(log_likelihood)
            #     }
-           #     alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+           #     alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
            #                                method = "Nelder-Mead")$par
            #   }
            # } ,
@@ -3702,22 +3709,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "stacy" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1, 5, 1), p4=c(0, 0, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3727,22 +3734,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "t" = {     ## [R, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(0.5, 5, 1), p3=c(0.5, 5, 0.5), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3753,22 +3760,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "tobit" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0, 0, 0.5), p2=c(1, 10, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3777,14 +3784,14 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "topple" = {     ## [01]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0.1, 0.9, 0.2), p2=c(1, 1, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                            p5=c(1, 1, 1), p6=c(1, 1, 1))
-             theta0 = GridSearchS0(family, y, params)
+             theta00 = GridSearchS0(family, y0, params)
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3797,22 +3804,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "transformedbeta" = {     ## [R+, R+, R+, R+]
 
              p = 4
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 1), p3=c(0.5, 5, 1), p4=c(1, 1, 1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3821,22 +3828,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "transformedgamma" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 1), p3=c(1, 5, 1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3846,20 +3853,20 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "truncatednormal" = {     ## [R, R+, R(min), R(max)]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(0, 0, 1), p2=c(0.5, 10, 0.5), p3=c(min(y)-0.05, min(y)-0.05, 1),
                            p4=c(max(y)+0.05, max(y)+0.05, 0.5), p5=c(1,1,1), p6=c(1,1,1))
-             thetaaa0 = GridSearchS0(family, y, params)
+             thetaaa0 = GridSearchS0(family, y0, params)
              theta0 = thetaaa0[1:2]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3868,15 +3875,15 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "truncatedpareto" = {     ## [R+(mini), R+(maxi), R+]
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              params = list(p1=c(min(y)-0.05, min(y)-0.05, 1), p2=c(max(y)+0.05, max(y)+0.05, 0.5),
                            p3=c(0.5, 10, 0.5), p4=c(0.5,0.5,1), p5=c(1,1,1), p6=c(1,1,1))
-             thetaaa0 = GridSearchS0(family, y, params)
+             thetaaa0 = GridSearchS0(family, y0, params)
              theta0 = thetaaa0[3]
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -3892,22 +3899,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "twosidedpower" = {     ## [01, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.1, 0.9, 0.2), p2=c(1, 5, 1), p3=c(1, 1, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3916,22 +3923,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "wald" = {     ## [R, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3940,22 +3947,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "weibull" = {     ## [R+, R+]
 
              p = 2
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 0.5), p2=c(0.5, 5, 1), p3=c(1,1,1), p4=c(1,1,1),
                              p5=c(1,1,1), p6=c(1,1,1))
-               theta0 = GridSearchS0(family, y, params)} else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params)} else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3964,22 +3971,22 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "xie" = {     ## [R+, R+, R+]
 
              p = 3
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              if (start == 0){
                params = list(p1=c(0.5, 5, 1), p2=c(0.5, 5, 0.5), p3=c(1, 5, 1), p4=c(1, 1, 1),
                              p5=c(1, 1, 1), p6=c(1, 1, 1))
-               theta0 = GridSearchS0(family, y, params) } else{
-                 theta0 = start
+               theta00 = GridSearchS0(family, y0, params) } else{
+                 theta00 = start
                }
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
                }
-               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta0), funParam0,
+               alpha0[j,] =  stats::optim(par= theta2alpha(family,theta00), funParam0,
                                           method = "Nelder-Mead")$par
              }
            } ,
@@ -3988,11 +3995,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
            "yules" = {     ## [R+] > 0.5
 
              p = 1
-             theta0 = matrix(0,reg,p)
-             alpha0 = theta0
+             theta00 = matrix(0,reg,p)
+             alpha0 = theta00
              for( j in un:reg){
                ind = (j-un)*n0+ind0
-               x = y[ind]
+               x=y0[ind]
                funParam0 <- function(thetaa){
                  log_likelihood = (-sum(log(PDF_unc(family, x, thetaa) ) ) )
                  return(log_likelihood)
@@ -4006,7 +4013,7 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
   } else {
       alpha0 = matrix(0, reg, p)
       for (j in un:reg){
-        alpha0[j,] = theta2alpha(family,theta0[j,])
+        alpha0[j,] = theta2alpha(family,theta00[j,])
       }
   }
 
@@ -4018,9 +4025,9 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
   # warm-up
   for (k in 1:ninit){
-    emstep= EMStep(y=y,ZI,theta=alpha0,Q=Q0,family=family, size=size)
+    emstep= EMStep(y,ZI,alpha0,Q0,family, size)
     nu=emstep$nu ;
-    alpha_new = emstep$theta_new;
+    alpha_new = emstep$alpha_new;
     Qnew = emstep$Qnew;
     eta = emstep$eta
     eta_bar =emstep$eta_bar;
@@ -4036,9 +4043,9 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
   # iterations
   for (k in 1:max_iter){
-    emstep= EMStep(y=y,ZI,theta=alpha0,Q=Q0,family=family, size=size)
+    emstep= EMStep(y,ZI,alpha0,Q0,family, size)
     nu = emstep$nu ;
-    alpha_new = emstep$theta_new;
+    alpha_new = emstep$alpha_new;
     Qnew = emstep$Qnew;
     eta = emstep$eta
     eta_bar = emstep$eta_bar;
@@ -4056,8 +4063,8 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
   }
 
   # output
-  alpha = alpha_new
-  Q = Qnew
+  alpha = alpha0
+  Q = Q0
 
 
   theta = matrix(0,reg,p)
@@ -4153,11 +4160,11 @@ EstHMMGen<-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, siz
 
 
 
-EMStep <- function(y, ZI=0, theta, Q, family, size=0){
+EMStep <- function(y, ZI, alpha, Q, family, size){
 
   n = length(y) #length of series
-  r = dim(theta)[1] #number of regimes
-  p = dim(theta)[2]
+  r = dim(alpha)[1] #number of regimes
+  p = dim(alpha)[2]
   eta_bar = matrix(0,n,r)
   eta = matrix(0,n,r)
   lambda   = matrix(0,n,r)
@@ -4169,12 +4176,21 @@ EMStep <- function(y, ZI=0, theta, Q, family, size=0){
   un=1+ZI
 
   if(ZI==1)
-    c[,1] = as.numeric(y==0)
+  {
+    ind0=(y==0)
+    ind=(y!=0)
+    c[ind0,1] = 1
 
-  for (j in un:r){
-    c[,j] = PDF_unc(family, y, theta[j,], size)
+
+    for (j in un:r){
+
+      c[ind,j] = PDF_unc(family, y[ind], alpha[j,], size)
+    }
+  }else{
+    ind=c(1:n)
+    for (j in 1:r){
+      c[,j] = PDF_unc(family, y, alpha[j,], size)  }
   }
-
 
   # eta_bar
   eta_bar[n,]=1/r
@@ -4237,24 +4253,25 @@ EMStep <- function(y, ZI=0, theta, Q, family, size=0){
     }
   }
 
+  y0=y[ind]
 
-
-  theta_new = matrix(0, nrow=r, ncol=p)
+  alpha_new = matrix(0, nrow=r, ncol=p)
   for(i in un:r){
-    fun <- function(thetaa){
-      log_likelihood = (-sum(lambda[,i]* log(PDF_unc(family, y, thetaa, size) ) ) )
+
+    fun <- function(alphaa){
+      log_likelihood = (-sum(lambda[ind,i]* log(PDF_unc(family, y0, alphaa, size) ) ) )
       return(log_likelihood)
     }
     if (p>1){
-      theta_new[i,] =  stats::optim(par= theta[i,], fn = fun, method = "Nelder-Mead")$par
+      alpha_new[i,] =  stats::optim(par= alpha[i,], fn = fun, method = "Nelder-Mead")$par
     } else {
-      theta_new[i,] =  stats::optimize(fun, c(log(0.1), log(100)))$minimum
+      alpha_new[i,] =  stats::optimize(fun, c(log(0.1), log(100)))$minimum
     }
 
   }
 
 
-  out = list(nu=nu, theta_new=theta_new, Qnew=Qnew, eta=eta, eta_bar=eta_bar, lambda=lambda,
+  out = list(nu=nu, alpha_new=alpha_new, Qnew=Qnew, eta=eta, eta_bar=eta_bar, lambda=lambda,
              Lambda=Lambda, LL=LL)
   return(out)
 

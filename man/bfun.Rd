@@ -4,17 +4,7 @@
 \alias{bfun}
 \title{Bootstrap for the univariate distributions}
 \usage{
-bfun(
-  theta,
-  Q,
-  ZI,
-  family,
-  n,
-  size = 0,
-  max_iter = 10000,
-  eps = 1e-04,
-  useFest = TRUE
-)
+bfun(theta, Q, ZI, family, start, n, size, max_iter, eps)
 }
 \arguments{
 \item{theta}{parameters}
@@ -32,8 +22,6 @@ bfun(
 \item{max_iter}{maximum number of iterations of the EM algorithm; suggestion 10000}
 
 \item{eps}{precision (stopping criteria); suggestion 0.0001}
-
-\item{useFest}{TRUE (default) to use the first estimated parameters as starting value for the bootstrap, FALSE otherwise}
 }
 \value{
 Internal function used for the parametric bootstrap

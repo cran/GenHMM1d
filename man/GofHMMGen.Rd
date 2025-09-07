@@ -14,8 +14,7 @@ GofHMMGen(
   eps = 1e-04,
   size = 0,
   n_samples = 1000,
-  n_cores = 1,
-  useFest = TRUE
+  n_cores = 1
 )
 }
 \arguments{
@@ -38,8 +37,6 @@ GofHMMGen(
 \item{n_samples}{number of bootstrap samples; suggestion 1000}
 
 \item{n_cores}{number of cores to use in the parallel computing}
-
-\item{useFest}{TRUE (default) to use the first estimated parameters as starting value for the bootstrap, FALSE otherwise}
 }
 \value{
 \item{pvalue}{pvalue of the Cramer-von Mises statistic in percent}
@@ -52,11 +49,11 @@ GofHMMGen(
 
 \item{lambda}{conditional probabilities of being in regime k at time t given all observations; (n x r)}
 
-\item{U}{matrix of Rosenblatt transforms; (n x r)}
+\item{U}{pseudo-observations that should be uniformly distributed under the null hypothesis}
 
 \item{cvm}{Cramer-von-Mises statistic for goodness-of-fit}
 
-\item{W}{pseudo-observations that should be uniformly distributed under the null hypothesis}
+\item{W}{matrix of Rosenblatt transforms; (n x r)}
 
 \item{LL}{log-likelihood}
 

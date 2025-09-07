@@ -47,11 +47,11 @@ EstHMMGen(
 
 \item{lambda}{conditional probabilities of being in regime k at time t given all observations; (n x r)}
 
-\item{U}{matrix of Rosenblatt transforms; (n x r)}
+\item{U}{pseudo-observations that should be uniformly distributed under the null hypothesis}
 
 \item{cvm}{cramer-von-Mises statistic for goodness-of-fit}
 
-\item{W}{pseudo-observations that should be uniformly distributed under the null hypothesis}
+\item{W}{matrix of Rosenblatt transforms; (n x r)}
 
 \item{LL}{log-likelihood}
 
@@ -88,7 +88,7 @@ family = "gaussian"
 Q = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2) ;
 theta = matrix(c(-1.5, 1.7, 1, 1),2,2) ;
 y = SimHMMGen(theta, Q=Q, family=family,  n=100)$SimData
-est = EstHMMGen(y, reg=2, family=family)
+est = EstHMMGen(y, ZI=0,reg=2, family=family)
 
 
 

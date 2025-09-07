@@ -13,7 +13,6 @@
 #'@param size      additional parameter for some discrete distributions; run the command distributions() for help
 #'@param n_samples number of bootstrap samples; suggestion 1000
 #'@param n_cores   number of cores to use in the parallel computing
-#'@param useFest   TRUE (default) to use the first estimated parameters as starting value for the bootstrap, FALSE otherwise
 #'
 #'
 #'@return \item{pvalue}{pvalue of the Cramer-von Mises statistic in percent}
@@ -21,9 +20,9 @@
 #'@return \item{Q}{estimated transition matrix; ; (r x r)}
 #'@return \item{eta}{(conditional probabilities of being in regime k at time t given observations up to time t; (n x r)}
 #'@return \item{lambda}{conditional probabilities of being in regime k at time t given all observations; (n x r)}
-#'@return \item{U}{matrix of Rosenblatt transforms; (n x r)}
+#'@return \item{U}{pseudo-observations that should be uniformly distributed under the null hypothesis}
 #'@return \item{cvm}{Cramer-von-Mises statistic for goodness-of-fit}
-#'@return \item{W}{pseudo-observations that should be uniformly distributed under the null hypothesis}
+#'@return \item{W}{matrix of Rosenblatt transforms; (n x r)}
 #'@return \item{LL}{log-likelihood}
 #'@return \item{nu}{stationary distribution}
 #'@return \item{AIC}{Akaike information criterion}
@@ -52,7 +51,7 @@
 #'
 #'
 #'
-GofHMMGen <-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, size=0, n_samples=1000, n_cores=1, useFest=TRUE){
+GofHMMGen <-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, size=0, n_samples=1000, n_cores=1){
   cl <- parallel::makePSOCKcluster(n_cores)
   doParallel::registerDoParallel(cl)
 
@@ -84,7 +83,7 @@ GofHMMGen <-function(y, ZI=0, reg, family, start=0, max_iter=10000, eps=1e-4, si
 
 
 
-  result <- foreach::foreach(i=1:n_samples, .packages="GenHMM1d") %dopar% bfun(theta, Q, ZI, family, n, size, max_iter, eps, useFest)
+  result <- foreach::foreach(i=1:n_samples, .packages="GenHMM1d") %dopar% bfun(theta, Q, ZI, family, start, n, size, max_iter, eps)
 
 
   cvm_sim1 = rep(0,n_samples)
